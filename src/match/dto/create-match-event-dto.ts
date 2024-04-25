@@ -1,5 +1,11 @@
-import { MatchEvent } from '@prisma/client';
 import { IsEnum, IsNotEmpty, IsString, Max, Min } from 'class-validator';
+
+export enum MatchEvent {
+  GOAL = 'GOAL',
+  YELLOW_CARD = 'YELLOW_CARD',
+  RED_CARD = 'RED_CARD',
+  // ... другие типы событий
+}
 
 export class CreateMatchEventDto {
   @IsNotEmpty()
