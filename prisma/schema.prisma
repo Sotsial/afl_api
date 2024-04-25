@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String  @id @default(uuid())
+  email String @unique
+  name String 
+  password String
+  player Player?
+  role Role @default(PLAYER)
+}
+
+enum Role {
+  PLAYER
+  ADMIN
+  SYSTEM_ADMIN
+}
+
+model Player {
+  id String  @id @default(uuid())
+  name String 
+  tournamentApplications TournamentApplication[]
+  matchApplications MatchApplication[]
+  matchTimeline MatchTimeline[]
+  user User @relation(fields: [userId], references: [id])
+  userId String  @unique
+  team Team? @relation(fields: [teamId], references: [id])
+  teamId String
+  isCaptain Boolean  @default(false)
+}
+
+model Team {
+  id  String  @id @default(uuid())
+  name String 
+  tournamentApplications TournamentApplication[]
+  match Match[] @relation(name: "participatingTeams") 
+  matchApplications MatchApplication[]
+  matchTimeline MatchTimeline[]
+  players Player[]
+  tournamentIds Tournament[]
+  wonMatchesIds Match[] @relation(name: "winningTeam") 
+}
+
+model Tournament {
+  id  String  @id @default(uuid())
+  name String 
+  tournamentApplications TournamentApplication[]
+  status TournamentStatus @default(NotStarted)
+  match Match[]
+  teamIds Team[]
+}
+
+enum TournamentStatus {
+  NotStarted
+  Pending
+  Completed
+}
+
+model TournamentApplication {
+  id  String  @id @default(uuid())
+  team Team @relation(fields: [teamId],references: [id])
+  teamId String
+  tournament Tournament @relation(fields: [tournamentId],references: [id])
+  tournamentId String
+  players Player[]
+  date DateTime?
+}
+
+model Match {
+  id  String  @id @default(uuid())
+  teams Team[] @relation(name: "participatingTeams") 
+  status MatchStatus @default(NotStarted)
+  date DateTime?
+  tournament Tournament @relation(fields: [tournamentId],references: [id])
+  tournamentId String
+  matchApplications MatchApplication[]
+  matchTimeline MatchTimeline[]
+  winner Team? @relation(name: "winningTeam", fields: [winnerId], references: [id]) 
+  winnerId String?
+}
+
+enum MatchStatus {
+  NotStarted
+  Completed
+  Pending
+}
+
+model MatchApplication {
+  id  String  @id @default(uuid())
+  team Team @relation(fields: [teamId],references: [id])
+  teamId String
+  match Match @relation(fields: [matchID],references: [id])
+  matchID String
+  players Player[]
+}
+
+model MatchTimeline {
+  id  String  @id @default(uuid())
+  time Int
+  type MatchEvent
+  team Team @relation(fields: [teamId],references: [id])
+  teamId String
+  match Match @relation(fields: [matchId],references: [id])
+  matchId String
+  player Player @relation(fields: [playerId],references: [id])
+  playerId String
+}
+
+enum MatchEvent {
+  GOAL
+  YELLOW
+  RED
+}
