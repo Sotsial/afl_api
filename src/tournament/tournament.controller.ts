@@ -15,7 +15,7 @@ import {
   CreateTournamentApplicationDto,
   createTournamentTours,
 } from './dto/create-tournament-application.dto';
-import { Public } from 'src/decorators/public.decorator';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('tournament')
 export class TournamentController {

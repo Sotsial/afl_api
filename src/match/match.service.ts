@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateMatchApplicationDto } from './dto/create-match-application.dto';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
 import { CreateMatchEventDto } from './dto/create-match-event-dto';

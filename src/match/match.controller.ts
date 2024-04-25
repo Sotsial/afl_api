@@ -16,7 +16,7 @@ import { UpdateMatchDto } from './dto/update-match.dto';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { CreateMatchEventDto } from './dto/create-match-event-dto';
-import { Public } from 'src/decorators/public.decorator';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('match')
 export class MatchController {

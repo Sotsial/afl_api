@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateTournamentApplicationDto } from './dto/create-tournament-application.dto';
-import { MatchService } from 'src/match/match.service';
+import { MatchService } from '../match/match.service';
 
 @Injectable()
 export class TournamentService {

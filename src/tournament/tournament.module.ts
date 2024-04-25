@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TournamentService } from './tournament.service';
 import { TournamentController } from './tournament.controller';
-import { PrismaService } from 'src/prisma.service';
-import { MatchModule } from 'src/match/match.module';
+import { PrismaService } from '../prisma.service';
+import { MatchModule } from '../match/match.module';
 
 @Module({
   controllers: [TournamentController],
