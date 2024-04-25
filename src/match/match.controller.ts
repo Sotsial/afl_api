@@ -14,8 +14,6 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { CreateMatchEventDto } from './dto/create-match-event-dto';
 import { Public } from '../decorators/public.decorator';
 
 @Controller('match')
@@ -60,7 +58,7 @@ export class MatchController {
   }
 
   @Post('event')
-  createMatchEvent(@Body() CreateMatchEventDto: CreateMatchEventDto) {
+  createMatchEvent(@Body() CreateMatchEventDto) {
     return this.matchService.createMatchEvent(CreateMatchEventDto);
   }
 

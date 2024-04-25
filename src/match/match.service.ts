@@ -4,7 +4,6 @@ import { UpdateMatchDto } from './dto/update-match.dto';
 import { PrismaService } from '../prisma.service';
 import { CreateMatchApplicationDto } from './dto/create-match-application.dto';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
-import { CreateMatchEventDto } from './dto/create-match-event-dto';
 import { MatchStatus } from '@prisma/client';
 
 @Injectable()
@@ -344,7 +343,7 @@ export class MatchService {
     return { message: 'Матч окончен' };
   }
 
-  async createMatchEvent(CreateMatchEventDto: CreateMatchEventDto) {
+  async createMatchEvent(CreateMatchEventDto) {
     return this.prisma.matchTimeline.create({
       data: CreateMatchEventDto,
     });
