@@ -45,6 +45,9 @@ let PlayerService = class PlayerService {
             include: {
                 team: true,
             },
+            orderBy: {
+                team: { name: 'asc' },
+            },
         });
         const totalCount = await this.prisma.player.count();
         return {
@@ -76,6 +79,7 @@ let PlayerService = class PlayerService {
             },
             include: {
                 team: true,
+                user: true,
             },
         });
         const matches = await this.prisma.match.findMany({
@@ -89,6 +93,7 @@ let PlayerService = class PlayerService {
                         },
                     },
                 },
+                status: 'Completed',
             },
             include: {
                 matchTimeline: {
@@ -103,8 +108,18 @@ let PlayerService = class PlayerService {
         const results = { matches: matches.length, goals };
         return { ...player, results };
     }
-    update(id, updatePlayerDto) {
-        return `This action updates a #${id} player`;
+    async update(id, updatePlayerDto) {
+        const player = await this.prisma.player.findUnique({
+            where: { id },
+        });
+        await this.userService.update(player.userId, updatePlayerDto);
+        await this.prisma.player.update({
+            where: {
+                id,
+            },
+            data: updatePlayerDto,
+        });
+        return { message: 'Игрок сохранен' };
     }
     remove(id) {
         return `This action removes a #${id} player`;

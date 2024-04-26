@@ -14,12 +14,14 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOne(email);
 
-    const passwordMatch = await argon2.verify(user.password, pass);
+    if (!user) throw new BadRequestException('Неверный логин или пароль');
+
+    const passwordMatch = await argon2.verify(user?.password, pass);
 
     if (user && passwordMatch) {
       return user;
     }
-    throw new BadRequestException('User not found');
+    throw new BadRequestException('Неверный логин или пароль');
   }
 
   async login(user: User & { player: Player }) {

@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const public_decorator_1 = require("../decorators/public.decorator");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
@@ -31,14 +32,15 @@ let UserController = class UserController {
         return this.userService.findOne(id);
     }
     update(id, updateUserDto) {
-        return this.userService.update(+id, updateUserDto);
+        return this.userService.update(id, updateUserDto);
     }
     remove(id) {
-        return this.userService.remove(+id);
+        return this.userService.remove(id);
     }
 };
 exports.UserController = UserController;
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

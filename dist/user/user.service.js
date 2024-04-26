@@ -32,8 +32,13 @@ let UserService = class UserService {
             include: { player: true },
         });
     }
-    update(id, updateUserDto) {
-        return `This action updates a #${id} user`;
+    async update(id, updateUserDto) {
+        return this.prisma.user.update({
+            where: {
+                id,
+            },
+            data: updateUserDto,
+        });
     }
     remove(id) {
         return `This action removes a #${id} user`;

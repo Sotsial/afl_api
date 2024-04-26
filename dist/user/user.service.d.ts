@@ -27,6 +27,12 @@ export declare class UserService {
         password: string;
         role: import(".prisma/client").$Enums.Role;
     }>;
-    update(id: number, updateUserDto: UpdateUserDto): string;
-    remove(id: number): string;
+    update(id: string, updateUserDto: UpdateUserDto): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        password: string;
+        role: import(".prisma/client").$Enums.Role;
+    }>;
+    remove(id: string): string;
 }

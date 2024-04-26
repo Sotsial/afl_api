@@ -16,6 +16,7 @@ export declare class MatchController {
         date: Date;
         tournamentId: string;
         winnerId: string;
+        place: string;
     }>;
     findList(req: any, query: any): Promise<{
         data: ({
@@ -34,6 +35,7 @@ export declare class MatchController {
             date: Date;
             tournamentId: string;
             winnerId: string;
+            place: string;
         })[];
         page: number;
         pageSize: number;
@@ -75,6 +77,7 @@ export declare class MatchController {
         date: Date;
         tournamentId: string;
         winnerId: string;
+        place: string;
     }>;
     findAll(dto: any): Promise<({
         matchTimeline: {
@@ -90,11 +93,12 @@ export declare class MatchController {
         date: Date;
         tournamentId: string;
         winnerId: string;
+        place: string;
     })[]>;
     updateApplication(UpdateMatchApplicationDto: UpdateMatchApplicationDto): Promise<{
         message: string;
     }>;
-    updateStage(id: any): Promise<{
+    updateStage(id: any): Promise<void | {
         message: string;
     }>;
     createMatchEvent(CreateMatchEventDto: any): Promise<{
@@ -121,12 +125,8 @@ export declare class MatchController {
         matchId: string;
         playerId: string;
     })[]>;
-    update(id: string, updateMatchDto: UpdateMatchDto): import(".prisma/client").Prisma.Prisma__MatchClient<{
-        id: string;
-        status: import(".prisma/client").$Enums.MatchStatus;
-        date: Date;
-        tournamentId: string;
-        winnerId: string;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    update(id: string, updateMatchDto: UpdateMatchDto): Promise<{
+        message: string;
+    }>;
     remove(id: string): string;
 }

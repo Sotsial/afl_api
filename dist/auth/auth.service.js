@@ -21,11 +21,13 @@ let AuthService = class AuthService {
     }
     async validateUser(email, pass) {
         const user = await this.usersService.findOne(email);
-        const passwordMatch = await argon2.verify(user.password, pass);
+        if (!user)
+            throw new common_1.BadRequestException('Неверный логин или пароль');
+        const passwordMatch = await argon2.verify(user?.password, pass);
         if (user && passwordMatch) {
             return user;
         }
-        throw new common_1.BadRequestException('User not found');
+        throw new common_1.BadRequestException('Неверный логин или пароль');
     }
     async login(user) {
         const { email, id, role, name, player } = user;

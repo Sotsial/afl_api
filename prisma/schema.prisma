@@ -84,10 +84,12 @@ model Match {
   matchTimeline MatchTimeline[]
   winner Team? @relation(name: "winningTeam", fields: [winnerId], references: [id]) 
   winnerId String?
+  place String?
 }
 
 enum MatchStatus {
   NotStarted
+  Preparation
   Completed
   Pending
 }

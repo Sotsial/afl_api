@@ -40,6 +40,7 @@ export declare class TeamService {
             date: Date;
             tournamentId: string;
             winnerId: string;
+            place: string;
         }[];
         players: {
             id: string;

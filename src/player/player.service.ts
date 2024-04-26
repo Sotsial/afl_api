@@ -43,6 +43,9 @@ export class PlayerService {
       include: {
         team: true,
       },
+      orderBy: {
+        team: { name: 'asc' },
+      },
     });
 
     const totalCount = await this.prisma.player.count();
@@ -79,6 +82,7 @@ export class PlayerService {
       },
       include: {
         team: true,
+        user: true,
       },
     });
 
@@ -93,6 +97,7 @@ export class PlayerService {
             },
           },
         },
+        status: 'Completed',
       },
       include: {
         matchTimeline: {
@@ -115,8 +120,21 @@ export class PlayerService {
     return { ...player, results };
   }
 
-  update(id: string, updatePlayerDto: UpdatePlayerDto) {
-    return `This action updates a #${id} player`;
+  async update(id: string, updatePlayerDto: UpdatePlayerDto) {
+    const player = await this.prisma.player.findUnique({
+      where: { id },
+    });
+
+    await this.userService.update(player.userId, updatePlayerDto);
+
+    await this.prisma.player.update({
+      where: {
+        id,
+      },
+      data: updatePlayerDto,
+    });
+
+    return { message: 'Игрок сохранен' };
   }
 
   remove(id: string) {

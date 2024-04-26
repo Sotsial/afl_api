@@ -20,4 +20,8 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", Date)
 ], UpdateMatchDto.prototype, "date", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateMatchDto.prototype, "place", void 0);
 //# sourceMappingURL=update-match.dto.js.map

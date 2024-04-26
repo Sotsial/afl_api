@@ -36,6 +36,7 @@ export declare class TeamController {
             date: Date;
             tournamentId: string;
             winnerId: string;
+            place: string;
         }[];
         players: {
             id: string;

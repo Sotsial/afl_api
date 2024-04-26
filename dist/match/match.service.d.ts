@@ -17,6 +17,7 @@ export declare class MatchService {
         date: Date;
         tournamentId: string;
         winnerId: string;
+        place: string;
     }>;
     findList(query: {
         current: number;
@@ -39,6 +40,7 @@ export declare class MatchService {
             date: Date;
             tournamentId: string;
             winnerId: string;
+            place: string;
         })[];
         page: number;
         pageSize: number;
@@ -63,6 +65,7 @@ export declare class MatchService {
         date: Date;
         tournamentId: string;
         winnerId: string;
+        place: string;
     })[]>;
     findOne(id: string): Promise<{
         matchTimeline: {
@@ -100,14 +103,11 @@ export declare class MatchService {
         date: Date;
         tournamentId: string;
         winnerId: string;
+        place: string;
     }>;
-    update(id: string, updateTeamDto: UpdateMatchDto): import(".prisma/client").Prisma.Prisma__MatchClient<{
-        id: string;
-        status: import(".prisma/client").$Enums.MatchStatus;
-        date: Date;
-        tournamentId: string;
-        winnerId: string;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    update(id: string, updateTeamDto: UpdateMatchDto): Promise<{
+        message: string;
+    }>;
     updateApplication(UpdateMatchApplicationDto: UpdateMatchApplicationDto): Promise<{
         message: string;
     }>;
@@ -116,9 +116,10 @@ export declare class MatchService {
         teamId: string;
         matchID: string;
     }>;
-    updateStage(id: string): Promise<{
+    updateStage(id: string): Promise<void | {
         message: string;
     }>;
+    preparingMatch(id: string): Promise<void>;
     startMatch(id: string): Promise<{
         message: string;
     }>;

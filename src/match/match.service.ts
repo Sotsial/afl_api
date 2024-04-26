@@ -148,7 +148,9 @@ export class MatchService {
             team: true,
           },
         },
-        matchTimeline: true,
+        matchTimeline: {
+          where: { type: 'GOAL' },
+        },
       },
     });
 
@@ -161,15 +163,17 @@ export class MatchService {
     return match;
   }
 
-  update(id: string, updateTeamDto: UpdateMatchDto) {
-    return this.prisma.match.update({
+  async update(id: string, updateTeamDto: UpdateMatchDto) {
+    await this.prisma.match.update({
       where: {
         id,
       },
       data: {
         date: updateTeamDto.date,
+        place: updateTeamDto.place,
       },
     });
+    return { message: 'Матч сохранен' };
   }
 
   async updateApplication(
@@ -254,8 +258,38 @@ export class MatchService {
         id,
       },
     });
-    if (match.status === 'NotStarted') return this.startMatch(id);
+    if (match.status === 'NotStarted') return this.preparingMatch(id);
+    else if (match.status === 'Preparation') return this.startMatch(id);
     else if (match.status === 'Pending') return this.endMatch(id);
+  }
+
+  async preparingMatch(id: string) {
+    const match = await this.prisma.match.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        matchApplications: {
+          include: {
+            players: true,
+          },
+        },
+      },
+    });
+
+    const isInadequatePlayers = match.matchApplications.some(
+      (application) => application.players.length < 5,
+    );
+
+    if (isInadequatePlayers)
+      throw new BadRequestException('В заявке не хватает игроков');
+
+    await this.prisma.match.update({
+      where: { id },
+      data: {
+        status: { set: 'Preparation' },
+      },
+    });
   }
 
   async startMatch(id: string) {
@@ -272,16 +306,9 @@ export class MatchService {
       },
     });
 
-    if (match.status !== 'NotStarted') {
+    if (match.status === 'Pending' || match.status === 'Completed') {
       throw new BadRequestException('Матч стартовал');
     }
-
-    const isInadequatePlayers = match.matchApplications.some(
-      (application) => application.players.length < 5,
-    );
-
-    if (isInadequatePlayers)
-      throw new BadRequestException('В заявке не хватает игроков');
 
     await this.prisma.match.update({
       where: { id },

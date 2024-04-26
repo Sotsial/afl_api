@@ -40,6 +40,13 @@ export declare class PlayerController {
             matches: number;
             goals: number;
         };
+        user: {
+            id: string;
+            email: string;
+            name: string;
+            password: string;
+            role: import(".prisma/client").$Enums.Role;
+        };
         team: {
             id: string;
             name: string;
@@ -50,6 +57,8 @@ export declare class PlayerController {
         teamId: string;
         isCaptain: boolean;
     }>;
-    update(id: string, updatePlayerDto: UpdatePlayerDto): string;
+    update(id: string, updatePlayerDto: UpdatePlayerDto): Promise<{
+        message: string;
+    }>;
     remove(id: string): string;
 }
