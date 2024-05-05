@@ -14,9 +14,11 @@ const common_1 = require("@nestjs/common");
 const user_service_1 = require("../user/user.service");
 const argon2 = require("argon2");
 const jwt_1 = require("@nestjs/jwt");
+const player_service_1 = require("../player/player.service");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService) {
+    constructor(usersService, playersService, jwtService) {
         this.usersService = usersService;
+        this.playersService = playersService;
         this.jwtService = jwtService;
     }
     async validateUser(email, pass) {
@@ -31,6 +33,11 @@ let AuthService = class AuthService {
     }
     async login(user) {
         const { email, id, role, name, player } = user;
+        let isCapitan = false;
+        if (role === 'PLAYER' && player) {
+            const { captainedTeam } = await this.playersService.findOne(player.id);
+            isCapitan = !!captainedTeam;
+        }
         return {
             access_token: this.jwtService.sign({
                 id,
@@ -38,6 +45,7 @@ let AuthService = class AuthService {
                 role,
                 name,
                 teamId: player?.teamId,
+                isCapitan,
             }),
         };
     }
@@ -46,6 +54,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [user_service_1.UserService,
+        player_service_1.PlayerService,
         jwt_1.JwtService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

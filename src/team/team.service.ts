@@ -36,8 +36,21 @@ export class TeamService {
     return this.prisma.team.findMany();
   }
 
-  async getDictionary() {
+  async getDictionary({
+    tournamentApplicationId,
+  }: {
+    tournamentApplicationId?: string;
+  }) {
+    const whereCondition: any = {};
+
+    if (tournamentApplicationId) {
+      whereCondition.tournamentApplications = {
+        some: { tournamentId: tournamentApplicationId },
+      };
+    }
+
     const list = await this.prisma.team.findMany({
+      where: whereCondition,
       select: {
         id: true,
         name: true,
@@ -49,8 +62,24 @@ export class TeamService {
   async findOne(id: string) {
     const team = await this.prisma.team.findUnique({
       where: { id },
-      include: { players: true, match: { where: { status: 'Completed' } } },
+      include: {
+        players: {
+          include: {
+            user: true,
+          },
+        },
+        match: { where: { status: 'Completed' } },
+        capitan: {
+          select: {
+            user: {
+              select: { name: true },
+            },
+          },
+        },
+      },
     });
+
+    if (!team) throw new NotFoundException('Team not found');
 
     const mathes = await this.prisma.match.findMany({
       where: { teams: { some: { id: team.id } }, status: 'Completed' },
@@ -71,7 +100,6 @@ export class TeamService {
         }
       }
 
-      // Return an object with all the counts and points
       return {
         matches: matches.length,
         wins: wins,
@@ -82,18 +110,18 @@ export class TeamService {
 
     const results = countResults(mathes, team.id);
 
-    if (!team) throw new NotFoundException('Team not found');
-
     return { ...team, results };
   }
 
-  update(id: string, updateTeamDto: UpdateTeamDto) {
-    return this.prisma.team.update({
+  async update(id: string, updateTeamDto: UpdateTeamDto) {
+    const team = await this.prisma.team.update({
       where: {
         id,
       },
       data: updateTeamDto,
     });
+
+    return { message: `Команда ${team.name} изменена` };
   }
 
   remove(id: string) {

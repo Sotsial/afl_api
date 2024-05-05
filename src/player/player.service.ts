@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { PrismaService } from '../prisma.service';
 import { UserService } from '../user/user.service';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class PlayerService {
@@ -12,50 +13,113 @@ export class PlayerService {
   ) {}
 
   async create({ name, teamId, email, password }: CreatePlayerDto) {
-    const team = await this.prisma.team.findUnique({
-      where: { id: teamId },
-    });
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const team = await tx.team.findUnique({
+          where: { id: teamId },
+          select: {
+            capitanId: true,
+            id: true,
+          },
+        });
 
-    const user = await this.userService.create({ email, name, password });
+        if (!team) {
+          throw new BadRequestException('Команда не найдена');
+        }
 
-    await this.prisma.player.create({
-      data: {
-        name,
-        user: {
-          connect: user,
-        },
-        team: {
-          connect: team,
-        },
-      },
-    });
+        const pass = await argon2.hash(password);
+        const user = await tx.user.create({
+          data: { email, name, password: pass },
+        });
 
-    return { message: 'Игрок создан' };
+        const player = await tx.player.create({
+          data: {
+            userId: user.id,
+            teamId: team.id,
+          },
+        });
+
+        if (!team.capitanId) {
+          await tx.team.update({
+            where: {
+              id: teamId,
+            },
+            data: {
+              capitan: { connect: player },
+            },
+          });
+        }
+
+        return { message: 'Игрок создан' };
+      });
+    } catch {
+      throw new BadRequestException('Ошибка при создании игрока');
+    }
   }
 
-  async findList(query: { current: number; pageSize: number }) {
-    const pageSize = Number(query.pageSize) ?? 10;
-    const pageNumber = Number(query.current) ?? 10;
+  async findList(query: {
+    current: number;
+    pageSize: number;
+    teamId?: string;
+  }) {
+    const { pageSize = 10, current = 1, teamId } = query;
+
+    const pageNumber = Math.max(1, current);
+    const skip = (pageNumber - 1) * pageSize;
+    const take = +pageSize;
 
     const results = await this.prisma.player.findMany({
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
-      include: {
-        team: true,
+      take,
+      skip,
+      where: {
+        teamId,
       },
-      orderBy: {
-        team: { name: 'asc' },
+      include: {
+        team: { select: { name: true } },
+        user: { select: { name: true } },
+        matchTimeline: {
+          select: {
+            type: true,
+          },
+        },
       },
     });
 
     const totalCount = await this.prisma.player.count();
 
+    results.forEach((player) => {
+      const statistic = player.matchTimeline.reduce(
+        (acc, event) => {
+          switch (event.type) {
+            case 'GOAL':
+              acc.goals++;
+              break;
+            case 'YELLOW':
+              acc.yellow++;
+              break;
+            case 'RED':
+              acc.red++;
+              break;
+          }
+          return acc;
+        },
+        { goals: 0, yellow: 0, red: 0 },
+      );
+
+      player['score'] = statistic;
+      delete player.matchTimeline;
+    });
+
     return {
       data: results,
       page: pageNumber,
-      pageSize: pageSize,
+      pageSize,
       total: totalCount,
     };
+  }
+
+  findAll() {
+    return this.prisma.player.findMany();
   }
 
   async getDictionary(teamId?: string) {
@@ -65,55 +129,40 @@ export class PlayerService {
       },
       select: {
         id: true,
-        name: true,
+        user: true,
       },
     });
-    return list.map((el) => ({ label: el.name, value: el.id }));
-  }
-
-  findAll() {
-    return this.prisma.player.findMany();
+    return list.map((el) => ({ label: el.user.name, value: el.id }));
   }
 
   async findOne(id: string) {
     const player = await this.prisma.player.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        team: true,
-        user: true,
-      },
+      where: { id },
+      include: { team: true, user: true, captainedTeam: true },
     });
 
-    const matches = await this.prisma.match.findMany({
-      where: {
-        matchApplications: {
-          some: {
-            players: {
-              some: {
-                id: player.id,
-              },
+    if (!player) {
+      throw new BadRequestException('Игрок не найден');
+    }
+
+    const [matches, goals] = await Promise.all([
+      this.prisma.match.findMany({
+        where: {
+          status: 'Completed',
+          matchApplications: {
+            some: {
+              players: { some: { id: player.id } },
             },
           },
         },
-        status: 'Completed',
-      },
-      include: {
-        matchTimeline: {
-          where: {
-            playerId: player.id,
-            type: 'GOAL',
-          },
+        include: {
+          matchTimeline: { where: { playerId: player.id, type: 'GOAL' } },
         },
-      },
-    });
-
-    const goals = matches.reduce(
-      (accumulator, currentMatch) =>
-        accumulator + currentMatch.matchTimeline.length,
-      0,
-    );
+      }),
+      this.prisma.matchTimeline.count({
+        where: { playerId: player.id, type: 'GOAL' },
+      }),
+    ]);
 
     const results = { matches: matches.length, goals };
 
@@ -123,21 +172,19 @@ export class PlayerService {
   async update(id: string, updatePlayerDto: UpdatePlayerDto) {
     const player = await this.prisma.player.findUnique({
       where: { id },
+      select: { userId: true },
     });
-
     await this.userService.update(player.userId, updatePlayerDto);
 
-    await this.prisma.player.update({
-      where: {
-        id,
-      },
-      data: updatePlayerDto,
-    });
+    if (updatePlayerDto.teamId) {
+      await this.prisma.player.update({
+        where: {
+          id,
+        },
+        data: updatePlayerDto,
+      });
+    }
 
     return { message: 'Игрок сохранен' };
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} player`;
   }
 }

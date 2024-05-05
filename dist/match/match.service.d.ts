@@ -1,46 +1,51 @@
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { PrismaService } from '../prisma.service';
-import { CreateMatchApplicationDto } from './dto/create-match-application.dto';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
 export declare class MatchService {
     private prisma;
     constructor(prisma: PrismaService);
     create(createMatchDto: CreateMatchDto): Promise<{
-        teams: {
-            id: string;
-            name: string;
-        }[];
-    } & {
         id: string;
         status: import(".prisma/client").$Enums.MatchStatus;
         date: Date;
-        tournamentId: string;
         winnerId: string;
         place: string;
+        tournamentId: string;
+        round: number;
     }>;
+    createMany({ matches, tournamentId, }: {
+        matches: {
+            teams: string[];
+            round: number;
+        }[];
+        tournamentId: string;
+    }): Promise<void>;
     findList(query: {
         current: number;
         pageSize: number;
-        userId: string;
+        userId?: string;
     }): Promise<{
         data: ({
             tournament: {
                 id: string;
                 name: string;
                 status: import(".prisma/client").$Enums.TournamentStatus;
+                startDate: Date;
             };
             teams: {
                 id: string;
                 name: string;
+                capitanId: string;
             }[];
         } & {
             id: string;
             status: import(".prisma/client").$Enums.MatchStatus;
             date: Date;
-            tournamentId: string;
             winnerId: string;
             place: string;
+            tournamentId: string;
+            round: number;
         })[];
         page: number;
         pageSize: number;
@@ -63,19 +68,12 @@ export declare class MatchService {
         id: string;
         status: import(".prisma/client").$Enums.MatchStatus;
         date: Date;
-        tournamentId: string;
         winnerId: string;
         place: string;
+        tournamentId: string;
+        round: number;
     })[]>;
     findOne(id: string): Promise<{
-        matchTimeline: {
-            id: string;
-            time: number;
-            type: import(".prisma/client").$Enums.MatchEvent;
-            teamId: string;
-            matchId: string;
-            playerId: string;
-        }[];
         matchApplications: ({
             team: {
                 id: string;
@@ -83,16 +81,17 @@ export declare class MatchService {
             };
             players: {
                 id: string;
-                name: string;
                 userId: string;
                 teamId: string;
-                isCaptain: boolean;
             }[];
         } & {
             id: string;
             teamId: string;
-            matchID: string;
+            matchId: string;
         })[];
+        matchTimeline: {
+            teamId: string;
+        }[];
         teams: {
             id: string;
             name: string;
@@ -101,20 +100,16 @@ export declare class MatchService {
         id: string;
         status: import(".prisma/client").$Enums.MatchStatus;
         date: Date;
-        tournamentId: string;
         winnerId: string;
         place: string;
+        tournamentId: string;
+        round: number;
     }>;
     update(id: string, updateTeamDto: UpdateMatchDto): Promise<{
         message: string;
     }>;
     updateApplication(UpdateMatchApplicationDto: UpdateMatchApplicationDto): Promise<{
         message: string;
-    }>;
-    createApplication(CreateMatchApplicationDto: CreateMatchApplicationDto): Promise<{
-        id: string;
-        teamId: string;
-        matchID: string;
     }>;
     updateStage(id: string): Promise<void | {
         message: string;
@@ -137,10 +132,8 @@ export declare class MatchService {
     findMatchEvents(id: string): Promise<({
         player: {
             id: string;
-            name: string;
             userId: string;
             teamId: string;
-            isCaptain: boolean;
         };
     } & {
         id: string;
@@ -150,5 +143,4 @@ export declare class MatchService {
         matchId: string;
         playerId: string;
     })[]>;
-    remove(id: string): string;
 }

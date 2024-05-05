@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { PlayerModule } from 'src/player/player.module';
 
 @Module({
   controllers: [AuthController],
@@ -14,6 +15,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
   imports: [
     UserModule,
     PassportModule,
+    PlayerModule,
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '3h' },

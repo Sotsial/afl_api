@@ -11,14 +11,11 @@ export declare class UserService {
         password: string;
         role: import(".prisma/client").$Enums.Role;
     }>;
-    findAll(): string;
     findOne(email: string): Promise<{
         player: {
             id: string;
-            name: string;
             userId: string;
             teamId: string;
-            isCaptain: boolean;
         };
     } & {
         id: string;
@@ -34,5 +31,4 @@ export declare class UserService {
         password: string;
         role: import(".prisma/client").$Enums.Role;
     }>;
-    remove(id: string): string;
 }

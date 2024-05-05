@@ -15,4 +15,6 @@ export class CreateMatchDto {
   @IsNotEmpty()
   @IsString()
   tournamentId: string;
+
+  round: number;
 }

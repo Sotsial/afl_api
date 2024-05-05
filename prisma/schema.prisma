@@ -25,15 +25,14 @@ enum Role {
 
 model Player {
   id String  @id @default(uuid())
-  name String 
-  tournamentApplications TournamentApplication[]
-  matchApplications MatchApplication[]
-  matchTimeline MatchTimeline[]
   user User @relation(fields: [userId], references: [id])
   userId String  @unique
   team Team? @relation(fields: [teamId], references: [id])
   teamId String
-  isCaptain Boolean  @default(false)
+  tournamentApplications TournamentApplication[]
+  matchApplications MatchApplication[]
+  matchTimeline MatchTimeline[]
+  captainedTeam Team? @relation(name: "capitan") 
 }
 
 model Team {
@@ -43,9 +42,11 @@ model Team {
   match Match[] @relation(name: "participatingTeams") 
   matchApplications MatchApplication[]
   matchTimeline MatchTimeline[]
-  players Player[]
-  tournamentIds Tournament[]
-  wonMatchesIds Match[] @relation(name: "winningTeam") 
+  players Player[] 
+  tournaments Tournament[]
+  wonMatches Match[] @relation(name: "winningTeam") 
+  capitan Player? @relation(fields: [capitanId], references: [id], name: "capitan") 
+  capitanId String? @unique 
 }
 
 model Tournament {
@@ -55,12 +56,7 @@ model Tournament {
   status TournamentStatus @default(NotStarted)
   match Match[]
   teamIds Team[]
-}
-
-enum TournamentStatus {
-  NotStarted
-  Pending
-  Completed
+  startDate DateTime?
 }
 
 model TournamentApplication {
@@ -70,7 +66,6 @@ model TournamentApplication {
   tournament Tournament @relation(fields: [tournamentId],references: [id])
   tournamentId String
   players Player[]
-  date DateTime?
 }
 
 model Match {
@@ -78,31 +73,24 @@ model Match {
   teams Team[] @relation(name: "participatingTeams") 
   status MatchStatus @default(NotStarted)
   date DateTime?
-  tournament Tournament @relation(fields: [tournamentId],references: [id])
-  tournamentId String
   matchApplications MatchApplication[]
   matchTimeline MatchTimeline[]
   winner Team? @relation(name: "winningTeam", fields: [winnerId], references: [id]) 
   winnerId String?
   place String?
-}
-
-enum MatchStatus {
-  NotStarted
-  Preparation
-  Completed
-  Pending
+  tournament Tournament @relation(fields: [tournamentId],references: [id])
+  tournamentId String
+  round Int
 }
 
 model MatchApplication {
   id  String  @id @default(uuid())
   team Team @relation(fields: [teamId],references: [id])
   teamId String
-  match Match @relation(fields: [matchID],references: [id])
-  matchID String
+  match Match @relation(fields: [matchId],references: [id])
+  matchId String
   players Player[]
 }
-
 model MatchTimeline {
   id  String  @id @default(uuid())
   time Int
@@ -119,4 +107,17 @@ enum MatchEvent {
   GOAL
   YELLOW
   RED
+}
+
+enum TournamentStatus {
+  NotStarted
+  Pending
+  Completed
+}
+
+enum MatchStatus {
+  NotStarted
+  Preparation
+  Completed
+  Pending
 }

@@ -15,10 +15,6 @@ export class UserService {
     });
   }
 
-  findAll() {
-    return `This action returns all user`;
-  }
-
   async findOne(email: string) {
     return await this.prisma.user.findUnique({
       where: { email },
@@ -33,9 +29,5 @@ export class UserService {
       },
       data: updateUserDto,
     });
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} user`;
   }
 }

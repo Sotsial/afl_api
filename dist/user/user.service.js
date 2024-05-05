@@ -23,9 +23,6 @@ let UserService = class UserService {
             data: { ...createUserDto, password },
         });
     }
-    findAll() {
-        return `This action returns all user`;
-    }
     async findOne(email) {
         return await this.prisma.user.findUnique({
             where: { email },
@@ -39,9 +36,6 @@ let UserService = class UserService {
             },
             data: updateUserDto,
         });
-    }
-    remove(id) {
-        return `This action removes a #${id} user`;
     }
 };
 exports.UserService = UserService;

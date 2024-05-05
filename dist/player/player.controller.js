@@ -40,9 +40,6 @@ let PlayerController = class PlayerController {
     update(id, updatePlayerDto) {
         return this.playerService.update(id, updatePlayerDto);
     }
-    remove(id) {
-        return this.playerService.remove(id);
-    }
 };
 exports.PlayerController = PlayerController;
 __decorate([
@@ -89,13 +86,6 @@ __decorate([
     __metadata("design:paramtypes", [String, update_player_dto_1.UpdatePlayerDto]),
     __metadata("design:returntype", void 0)
 ], PlayerController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], PlayerController.prototype, "remove", null);
 exports.PlayerController = PlayerController = __decorate([
     (0, common_1.Controller)('player'),
     __metadata("design:paramtypes", [player_service_1.PlayerService])

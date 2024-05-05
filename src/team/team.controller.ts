@@ -33,8 +33,8 @@ export class TeamController {
 
   @Public()
   @Get('dictionary')
-  getDictionary() {
-    return this.teamService.getDictionary();
+  getDictionary(@Param() params) {
+    return this.teamService.getDictionary(params);
   }
 
   @Public()

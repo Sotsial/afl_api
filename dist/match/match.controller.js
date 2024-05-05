@@ -53,9 +53,6 @@ let MatchController = class MatchController {
     update(id, updateMatchDto) {
         return this.matchService.update(id, updateMatchDto);
     }
-    remove(id) {
-        return this.matchService.remove(id);
-    }
 };
 exports.MatchController = MatchController;
 __decorate([
@@ -126,13 +123,6 @@ __decorate([
     __metadata("design:paramtypes", [String, update_match_dto_1.UpdateMatchDto]),
     __metadata("design:returntype", void 0)
 ], MatchController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], MatchController.prototype, "remove", null);
 exports.MatchController = MatchController = __decorate([
     (0, common_1.Controller)('match'),
     __metadata("design:paramtypes", [match_service_1.MatchService])

@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Query,
 } from '@nestjs/common';
 import { PlayerService } from './player.service';
@@ -23,7 +22,9 @@ export class PlayerController {
   }
 
   @Get('list')
-  findList(@Query() query) {
+  findList(
+    @Query() query: { current: number; pageSize: number; teamId?: string },
+  ) {
     return this.playerService.findList(query);
   }
 
@@ -47,10 +48,5 @@ export class PlayerController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
     return this.playerService.update(id, updatePlayerDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.playerService.remove(id);
   }
 }

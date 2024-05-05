@@ -18,6 +18,7 @@ export declare class TournamentService {
             id: string;
             name: string;
             status: import(".prisma/client").$Enums.TournamentStatus;
+            startDate: Date;
         }[];
         page: number;
         pageSize: number;
@@ -27,6 +28,7 @@ export declare class TournamentService {
         id: string;
         name: string;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        startDate: Date;
     }[]>;
     getDictionary(): Promise<{
         label: string;
@@ -37,11 +39,13 @@ export declare class TournamentService {
         id: string;
         name: string;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        startDate: Date;
     }>;
     update(id: string, updateTournamentDto: UpdateTournamentDto): import(".prisma/client").Prisma.Prisma__TournamentClient<{
         id: string;
         name: string;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        startDate: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     getTable(id: string): Promise<{
         scored: number;
@@ -54,15 +58,33 @@ export declare class TournamentService {
         points: number;
         id: string;
         name: string;
+        capitanId: string;
     }[]>;
-    remove(id: string): string;
-    createApplication(tournamentApplicationDto: CreateTournamentApplicationDto): Promise<{
+    getApplications({ tournamentId, teamId, }: {
+        tournamentId: string;
+        teamId?: string;
+    }): Promise<({
+        team: {
+            name: string;
+        };
+        players: {
+            id: string;
+            userId: string;
+            teamId: string;
+        }[];
+    } & {
         id: string;
         teamId: string;
         tournamentId: string;
-        date: Date;
-    }>;
-    createTours(tournamentId: string): Promise<{
+    })[]>;
+    createApplication({ playerIds, teamId, tournamentId, }: CreateTournamentApplicationDto): Promise<{
         message: string;
     }>;
+    updateApplication({ playerIds, id, }: {
+        playerIds: string[];
+        id: string;
+    }): Promise<{
+        message: string;
+    }>;
+    createTours(tournamentId: string): Promise<any>;
 }

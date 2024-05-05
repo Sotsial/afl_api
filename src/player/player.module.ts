@@ -7,6 +7,7 @@ import { UserModule } from '../user/user.module';
 @Module({
   controllers: [PlayerController],
   providers: [PlayerService, PrismaService],
+  exports: [PlayerService],
   imports: [UserModule],
 })
 export class PlayerModule {}

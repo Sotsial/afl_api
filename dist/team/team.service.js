@@ -38,8 +38,15 @@ let TeamService = class TeamService {
     findAll() {
         return this.prisma.team.findMany();
     }
-    async getDictionary() {
+    async getDictionary({ tournamentApplicationId, }) {
+        const whereCondition = {};
+        if (tournamentApplicationId) {
+            whereCondition.tournamentApplications = {
+                some: { tournamentId: tournamentApplicationId },
+            };
+        }
         const list = await this.prisma.team.findMany({
+            where: whereCondition,
             select: {
                 id: true,
                 name: true,
@@ -50,8 +57,24 @@ let TeamService = class TeamService {
     async findOne(id) {
         const team = await this.prisma.team.findUnique({
             where: { id },
-            include: { players: true, match: { where: { status: 'Completed' } } },
+            include: {
+                players: {
+                    include: {
+                        user: true,
+                    },
+                },
+                match: { where: { status: 'Completed' } },
+                capitan: {
+                    select: {
+                        user: {
+                            select: { name: true },
+                        },
+                    },
+                },
+            },
         });
+        if (!team)
+            throw new common_1.NotFoundException('Team not found');
         const mathes = await this.prisma.match.findMany({
             where: { teams: { some: { id: team.id } }, status: 'Completed' },
         });
@@ -78,17 +101,16 @@ let TeamService = class TeamService {
             };
         }
         const results = countResults(mathes, team.id);
-        if (!team)
-            throw new common_1.NotFoundException('Team not found');
         return { ...team, results };
     }
-    update(id, updateTeamDto) {
-        return this.prisma.team.update({
+    async update(id, updateTeamDto) {
+        const team = await this.prisma.team.update({
             where: {
                 id,
             },
             data: updateTeamDto,
         });
+        return { message: `Команда ${team.name} изменена` };
     }
     remove(id) {
         return this.prisma.team.delete({

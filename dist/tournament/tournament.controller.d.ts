@@ -8,11 +8,35 @@ export declare class TournamentController {
     create(createTournamentDto: CreateTournamentDto): Promise<{
         message: string;
     }>;
+    createApplication(tournamentApplicationDto: CreateTournamentApplicationDto): Promise<{
+        message: string;
+    }>;
+    updateApplication(id: string, { playerIds }: {
+        playerIds: any;
+    }): Promise<{
+        message: string;
+    }>;
+    getApplications(query: any): Promise<({
+        team: {
+            name: string;
+        };
+        players: {
+            id: string;
+            userId: string;
+            teamId: string;
+        }[];
+    } & {
+        id: string;
+        teamId: string;
+        tournamentId: string;
+    })[]>;
+    createTours({ tournamentId }: createTournamentTours): Promise<any>;
     findList(query: any): Promise<{
         data: {
             id: string;
             name: string;
             status: import(".prisma/client").$Enums.TournamentStatus;
+            startDate: Date;
         }[];
         page: number;
         pageSize: number;
@@ -22,6 +46,7 @@ export declare class TournamentController {
         id: string;
         name: string;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        startDate: Date;
     }[]>;
     getDictionary(): Promise<{
         label: string;
@@ -32,6 +57,7 @@ export declare class TournamentController {
         id: string;
         name: string;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        startDate: Date;
     }>;
     getTable(id: string): Promise<{
         scored: number;
@@ -44,20 +70,12 @@ export declare class TournamentController {
         points: number;
         id: string;
         name: string;
+        capitanId: string;
     }[]>;
     update(id: string, updateTournamentDto: UpdateTournamentDto): import(".prisma/client").Prisma.Prisma__TournamentClient<{
         id: string;
         name: string;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        startDate: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
-    remove(id: string): string;
-    createApplication(tournamentApplicationDto: CreateTournamentApplicationDto): Promise<{
-        id: string;
-        teamId: string;
-        tournamentId: string;
-        date: Date;
-    }>;
-    createTours({ tournamentId }: createTournamentTours): Promise<{
-        message: string;
-    }>;
 }

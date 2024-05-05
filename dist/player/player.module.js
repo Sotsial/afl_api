@@ -19,6 +19,7 @@ exports.PlayerModule = PlayerModule = __decorate([
     (0, common_1.Module)({
         controllers: [player_controller_1.PlayerController],
         providers: [player_service_1.PlayerService, prisma_service_1.PrismaService],
+        exports: [player_service_1.PlayerService],
         imports: [user_module_1.UserModule],
     })
 ], PlayerModule);

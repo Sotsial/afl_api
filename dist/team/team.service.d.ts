@@ -14,6 +14,7 @@ export declare class TeamService {
         data: {
             id: string;
             name: string;
+            capitanId: string;
         }[];
         page: number;
         pageSize: number;
@@ -22,8 +23,11 @@ export declare class TeamService {
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         name: string;
+        capitanId: string;
     }[]>;
-    getDictionary(): Promise<{
+    getDictionary({ tournamentApplicationId, }: {
+        tournamentApplicationId?: string;
+    }): Promise<{
         label: string;
         value: string;
     }[]>;
@@ -38,26 +42,39 @@ export declare class TeamService {
             id: string;
             status: import(".prisma/client").$Enums.MatchStatus;
             date: Date;
-            tournamentId: string;
             winnerId: string;
             place: string;
+            tournamentId: string;
+            round: number;
         }[];
-        players: {
+        players: ({
+            user: {
+                id: string;
+                email: string;
+                name: string;
+                password: string;
+                role: import(".prisma/client").$Enums.Role;
+            };
+        } & {
             id: string;
-            name: string;
             userId: string;
             teamId: string;
-            isCaptain: boolean;
-        }[];
+        })[];
+        capitan: {
+            user: {
+                name: string;
+            };
+        };
         id: string;
         name: string;
+        capitanId: string;
     }>;
-    update(id: string, updateTeamDto: UpdateTeamDto): import(".prisma/client").Prisma.Prisma__TeamClient<{
-        id: string;
-        name: string;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    update(id: string, updateTeamDto: UpdateTeamDto): Promise<{
+        message: string;
+    }>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__TeamClient<{
         id: string;
         name: string;
+        capitanId: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

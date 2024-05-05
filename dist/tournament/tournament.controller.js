@@ -26,6 +26,18 @@ let TournamentController = class TournamentController {
     create(createTournamentDto) {
         return this.tournamentService.create(createTournamentDto);
     }
+    createApplication(tournamentApplicationDto) {
+        return this.tournamentService.createApplication(tournamentApplicationDto);
+    }
+    updateApplication(id, { playerIds }) {
+        return this.tournamentService.updateApplication({ id, playerIds });
+    }
+    getApplications(query) {
+        return this.tournamentService.getApplications(query);
+    }
+    createTours({ tournamentId }) {
+        return this.tournamentService.createTours(tournamentId);
+    }
     findList(query) {
         return this.tournamentService.findList(query);
     }
@@ -44,15 +56,6 @@ let TournamentController = class TournamentController {
     update(id, updateTournamentDto) {
         return this.tournamentService.update(id, updateTournamentDto);
     }
-    remove(id) {
-        return this.tournamentService.remove(id);
-    }
-    createApplication(tournamentApplicationDto) {
-        return this.tournamentService.createApplication(tournamentApplicationDto);
-    }
-    createTours({ tournamentId }) {
-        return this.tournamentService.createTours(tournamentId);
-    }
 };
 exports.TournamentController = TournamentController;
 __decorate([
@@ -62,6 +65,35 @@ __decorate([
     __metadata("design:paramtypes", [create_tournament_dto_1.CreateTournamentDto]),
     __metadata("design:returntype", void 0)
 ], TournamentController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)('application'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_tournament_application_dto_1.CreateTournamentApplicationDto]),
+    __metadata("design:returntype", void 0)
+], TournamentController.prototype, "createApplication", null);
+__decorate([
+    (0, common_1.Patch)('application/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], TournamentController.prototype, "updateApplication", null);
+__decorate([
+    (0, common_1.Get)('application'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], TournamentController.prototype, "getApplications", null);
+__decorate([
+    (0, common_1.Post)('stage'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_tournament_application_dto_1.createTournamentTours]),
+    __metadata("design:returntype", void 0)
+], TournamentController.prototype, "createTours", null);
 __decorate([
     (0, common_1.Get)('list'),
     __param(0, (0, common_1.Query)()),
@@ -105,27 +137,6 @@ __decorate([
     __metadata("design:paramtypes", [String, update_tournament_dto_1.UpdateTournamentDto]),
     __metadata("design:returntype", void 0)
 ], TournamentController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], TournamentController.prototype, "remove", null);
-__decorate([
-    (0, common_1.Post)('application'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_tournament_application_dto_1.CreateTournamentApplicationDto]),
-    __metadata("design:returntype", void 0)
-], TournamentController.prototype, "createApplication", null);
-__decorate([
-    (0, common_1.Post)('stage'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_tournament_application_dto_1.createTournamentTours]),
-    __metadata("design:returntype", void 0)
-], TournamentController.prototype, "createTours", null);
 exports.TournamentController = TournamentController = __decorate([
     (0, common_1.Controller)('tournament'),
     __metadata("design:paramtypes", [tournament_service_1.TournamentService])

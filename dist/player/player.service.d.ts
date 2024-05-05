@@ -6,39 +6,39 @@ export declare class PlayerService {
     private prisma;
     private userService;
     constructor(prisma: PrismaService, userService: UserService);
-    create({ name, teamId, email, password }: CreatePlayerDto): Promise<{
-        message: string;
-    }>;
+    create({ name, teamId, email, password }: CreatePlayerDto): Promise<void>;
     findList(query: {
         current: number;
         pageSize: number;
+        teamId?: string;
     }): Promise<{
         data: ({
-            team: {
-                id: string;
+            user: {
                 name: string;
             };
+            team: {
+                name: string;
+            };
+            matchTimeline: {
+                type: import(".prisma/client").$Enums.MatchEvent;
+            }[];
         } & {
             id: string;
-            name: string;
             userId: string;
             teamId: string;
-            isCaptain: boolean;
         })[];
         page: number;
         pageSize: number;
         total: number;
     }>;
+    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        userId: string;
+        teamId: string;
+    }[]>;
     getDictionary(teamId?: string): Promise<{
         label: string;
         value: string;
-    }[]>;
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
-        id: string;
-        name: string;
-        userId: string;
-        teamId: string;
-        isCaptain: boolean;
     }[]>;
     findOne(id: string): Promise<{
         results: {
@@ -55,15 +55,18 @@ export declare class PlayerService {
         team: {
             id: string;
             name: string;
+            capitanId: string;
+        };
+        captainedTeam: {
+            id: string;
+            name: string;
+            capitanId: string;
         };
         id: string;
-        name: string;
         userId: string;
         teamId: string;
-        isCaptain: boolean;
     }>;
     update(id: string, updatePlayerDto: UpdatePlayerDto): Promise<{
         message: string;
     }>;
-    remove(id: string): string;
 }

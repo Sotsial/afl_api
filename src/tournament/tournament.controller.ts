@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Query,
 } from '@nestjs/common';
 import { TournamentService } from './tournament.service';
@@ -24,6 +23,28 @@ export class TournamentController {
   @Post()
   create(@Body() createTournamentDto: CreateTournamentDto) {
     return this.tournamentService.create(createTournamentDto);
+  }
+
+  @Post('application')
+  createApplication(
+    @Body() tournamentApplicationDto: CreateTournamentApplicationDto,
+  ) {
+    return this.tournamentService.createApplication(tournamentApplicationDto);
+  }
+
+  @Patch('application/:id')
+  updateApplication(@Param('id') id: string, @Body() { playerIds }) {
+    return this.tournamentService.updateApplication({ id, playerIds });
+  }
+
+  @Get('application')
+  getApplications(@Query() query) {
+    return this.tournamentService.getApplications(query);
+  }
+
+  @Post('stage')
+  createTours(@Body() { tournamentId }: createTournamentTours) {
+    return this.tournamentService.createTours(tournamentId);
   }
 
   @Get('list')
@@ -59,22 +80,5 @@ export class TournamentController {
     @Body() updateTournamentDto: UpdateTournamentDto,
   ) {
     return this.tournamentService.update(id, updateTournamentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tournamentService.remove(id);
-  }
-
-  @Post('application')
-  createApplication(
-    @Body() tournamentApplicationDto: CreateTournamentApplicationDto,
-  ) {
-    return this.tournamentService.createApplication(tournamentApplicationDto);
-  }
-
-  @Post('stage')
-  createTours(@Body() { tournamentId }: createTournamentTours) {
-    return this.tournamentService.createTours(tournamentId);
   }
 }
