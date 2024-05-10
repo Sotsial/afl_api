@@ -61,9 +61,9 @@ export class PlayerService {
     current: number;
     pageSize: number;
     teamId?: string;
+    tournamentId?: string;
   }) {
     const { pageSize = 10, current = 1, teamId } = query;
-
     const pageNumber = Math.max(1, current);
     const skip = (pageNumber - 1) * pageSize;
     const take = +pageSize;
@@ -122,10 +122,19 @@ export class PlayerService {
     return this.prisma.player.findMany();
   }
 
-  async getDictionary(teamId?: string) {
+  async getDictionary({
+    teamId,
+    tournamentId,
+  }: {
+    teamId?: string;
+    tournamentId?: string;
+  }) {
     const list = await this.prisma.player.findMany({
       where: {
         teamId,
+        tournamentApplications: {
+          some: { tournamentId },
+        },
       },
       select: {
         id: true,

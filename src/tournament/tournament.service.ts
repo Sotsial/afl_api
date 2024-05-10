@@ -4,6 +4,7 @@ import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { PrismaService } from '../prisma.service';
 import { CreateTournamentApplicationDto } from './dto/create-tournament-application.dto';
 import { MatchService } from '../match/match.service';
+import { defineWinner } from 'src/utils/utils';
 
 @Injectable()
 export class TournamentService {
@@ -97,7 +98,7 @@ export class TournamentService {
       select: {
         match: {
           where: {
-            status: 'Completed',
+            status: { notIn: ['NotStarted', 'Suspended', 'Preparation'] },
           },
           include: {
             matchTimeline: {
@@ -117,9 +118,19 @@ export class TournamentService {
         match.teams.some((el) => el.id === team.id),
       );
 
+      myMathes.forEach((el) => {
+        if (el.status === 'Pending' || el.status === 'Break') {
+          el.winnerId = defineWinner(el);
+        }
+      });
+
+      const liveMatch = myMathes.find(
+        (el) => el.status === 'Pending' || el.status === 'Break',
+      )?.id;
+
       const results = countGoalsAndResultsWithPoints(myMathes, team.id);
 
-      return { ...team, ...results };
+      return { ...team, ...results, liveMatch };
     });
 
     table.sort((a, b) => {

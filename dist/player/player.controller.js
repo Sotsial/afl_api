@@ -31,8 +31,8 @@ let PlayerController = class PlayerController {
     findAll() {
         return this.playerService.findAll();
     }
-    getDictionary(teamId) {
-        return this.playerService.getDictionary(teamId);
+    getDictionary(query) {
+        return this.playerService.getDictionary(query);
     }
     findOne(id) {
         return this.playerService.findOne(id);
@@ -65,7 +65,7 @@ __decorate([
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Get)('dictionary'),
-    __param(0, (0, common_1.Query)('teamId')),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)

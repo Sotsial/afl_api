@@ -8,6 +8,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MatchModule } from './match/match.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BackgroundTasksModule } from './background-tasks/background-tasks.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { MatchModule } from './match/match.module';
     AuthModule,
     UserModule,
     MatchModule,
+    ScheduleModule.forRoot(),
+    BackgroundTasksModule,
   ],
   providers: [
     {

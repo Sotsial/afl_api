@@ -8,4 +8,7 @@ export class UpdateMatchApplicationDto {
   @IsNotEmpty()
   @IsString()
   id: string;
+
+  @IsString()
+  color: string;
 }

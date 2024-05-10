@@ -17,6 +17,8 @@ const core_1 = require("@nestjs/core");
 const roles_guard_1 = require("./auth/guards/roles.guard");
 const jwt_auth_guard_1 = require("./auth/guards/jwt-auth.guard");
 const match_module_1 = require("./match/match.module");
+const schedule_1 = require("@nestjs/schedule");
+const background_tasks_module_1 = require("./background-tasks/background-tasks.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -29,6 +31,8 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             user_module_1.UserModule,
             match_module_1.MatchModule,
+            schedule_1.ScheduleModule.forRoot(),
+            background_tasks_module_1.BackgroundTasksModule,
         ],
         providers: [
             {

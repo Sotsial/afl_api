@@ -11,9 +11,9 @@ import {
 import { MatchService } from './match.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
 import { Public } from '../decorators/public.decorator';
+import { CreateMatchEventDto } from './dto/create-match-event-dto';
 
 @Controller('match')
 export class MatchController {
@@ -46,9 +46,9 @@ export class MatchController {
 
   @Post('application')
   updateApplication(
-    @Body() UpdateMatchApplicationDto: UpdateMatchApplicationDto,
+    @Body() updateMatchApplicationDto: UpdateMatchApplicationDto,
   ) {
-    return this.matchService.updateApplication(UpdateMatchApplicationDto);
+    return this.matchService.updateApplication(updateMatchApplicationDto);
   }
 
   @Post('stage')
@@ -57,8 +57,8 @@ export class MatchController {
   }
 
   @Post('event')
-  createMatchEvent(@Body() CreateMatchEventDto) {
-    return this.matchService.createMatchEvent(CreateMatchEventDto);
+  createMatchEvent(@Body() createMatchEventDto: CreateMatchEventDto) {
+    return this.matchService.createMatchEvent(createMatchEventDto);
   }
 
   @Public()
@@ -70,5 +70,10 @@ export class MatchController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMatchDto: UpdateMatchDto) {
     return this.matchService.update(id, updateMatchDto);
+  }
+
+  @Patch('time/:id')
+  changeTime(@Param('id') id: string, @Body('time') time) {
+    return this.matchService.changeTime(id, time);
   }
 }

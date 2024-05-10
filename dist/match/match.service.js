@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
+const utils_1 = require("../utils/utils");
 let MatchService = class MatchService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -175,14 +176,18 @@ let MatchService = class MatchService {
         }
         return match;
     }
-    async update(id, updateTeamDto) {
+    async update(id, updateMatchDto) {
+        const { date, place, firstReferee, mainReferee, secondReferee } = updateMatchDto;
         await this.prisma.match.update({
             where: {
                 id,
             },
             data: {
-                date: updateTeamDto.date,
-                place: updateTeamDto.place,
+                date,
+                place,
+                mainReferee,
+                firstReferee,
+                secondReferee,
             },
         });
         return { message: 'Матч сохранен' };
@@ -212,21 +217,26 @@ let MatchService = class MatchService {
                 players: {
                     set: players.map((player) => ({ id: player.id })),
                 },
+                color: UpdateMatchApplicationDto.color,
             },
         });
         return { message: 'Заявка создана' };
     }
     async updateStage(id) {
-        const match = await this.prisma.match.findUnique({
+        const { status, half } = await this.prisma.match.findUnique({
             where: {
                 id,
             },
         });
-        if (match.status === 'NotStarted')
+        if (status === 'NotStarted')
             return this.preparingMatch(id);
-        else if (match.status === 'Preparation')
+        else if (status === 'Preparation')
             return this.startMatch(id);
-        else if (match.status === 'Pending')
+        else if (status === 'Pending' && half === 1)
+            return this.halfTimeMatch(id, 'start');
+        else if (status === 'Break')
+            return this.halfTimeMatch(id, 'end');
+        else if (status === 'Pending' && half === 2)
             return this.endMatch(id);
     }
     async preparingMatch(id) {
@@ -252,6 +262,33 @@ let MatchService = class MatchService {
             },
         });
     }
+    async halfTimeMatch(id, status) {
+        if (status === 'start') {
+            await this.prisma.match.update({
+                where: {
+                    id,
+                },
+                data: {
+                    half: 2,
+                    status: 'Break',
+                    time: 20,
+                },
+            });
+            return { message: 'Перерыв' };
+        }
+        else if (status === 'end') {
+            await this.prisma.match.update({
+                where: {
+                    id,
+                },
+                data: {
+                    half: 2,
+                    status: 'Pending',
+                },
+            });
+            return { message: 'Второй тайм' };
+        }
+    }
     async startMatch(id) {
         const match = await this.prisma.match.findUnique({
             where: {
@@ -276,6 +313,24 @@ let MatchService = class MatchService {
         });
         return { message: 'Матч стартовал' };
     }
+    async updateTime() {
+        return this.prisma.match.updateMany({
+            where: { status: 'Pending' },
+            data: {
+                time: {
+                    increment: 1,
+                },
+            },
+        });
+    }
+    async changeTime(id, time) {
+        return this.prisma.match.update({
+            where: { id },
+            data: {
+                time,
+            },
+        });
+    }
     async endMatch(id) {
         const match = await this.prisma.match.findUnique({
             where: {
@@ -291,26 +346,7 @@ let MatchService = class MatchService {
                 teams: true,
             },
         });
-        const goals = match.matchTimeline.filter((el) => el.type === 'GOAL');
-        function countTeamGoals(goals) {
-            const teamGoals = {};
-            for (const event of goals) {
-                if (event.type === 'GOAL') {
-                    const teamId = event.teamId;
-                    teamGoals[teamId] = (teamGoals[teamId] || 0) + 1;
-                }
-            }
-            return teamGoals;
-        }
-        const teamGoals = countTeamGoals(goals);
-        const [firstTeam, secondTeam] = match.teams;
-        let winningTeamId = null;
-        if (teamGoals[firstTeam.id] > teamGoals[secondTeam.id]) {
-            winningTeamId = firstTeam.id;
-        }
-        else if (teamGoals[firstTeam.id] < teamGoals[secondTeam.id]) {
-            winningTeamId = secondTeam.id;
-        }
+        const winningTeamId = (0, utils_1.defineWinner)(match);
         await this.prisma.match.update({
             where: { id },
             data: {
@@ -320,9 +356,16 @@ let MatchService = class MatchService {
         });
         return { message: 'Матч окончен' };
     }
-    async createMatchEvent(CreateMatchEventDto) {
+    async createMatchEvent({ teamId, matchId, playerId, half, time, type, }) {
         return this.prisma.matchTimeline.create({
-            data: CreateMatchEventDto,
+            data: {
+                team: { connect: { id: teamId } },
+                match: { connect: { id: matchId } },
+                player: { connect: { id: playerId } },
+                half,
+                time,
+                type,
+            },
         });
     }
     async findMatchEvents(id) {
@@ -331,7 +374,11 @@ let MatchService = class MatchService {
                 matchId: id,
             },
             include: {
-                player: true,
+                player: {
+                    select: {
+                        user: { select: { name: true } },
+                    },
+                },
             },
         });
     }

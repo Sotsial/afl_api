@@ -2,6 +2,7 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { PrismaService } from '../prisma.service';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
+import { CreateMatchEventDto } from './dto/create-match-event-dto';
 export declare class MatchService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -13,6 +14,11 @@ export declare class MatchService {
         place: string;
         tournamentId: string;
         round: number;
+        time: number;
+        half: number;
+        mainReferee: string;
+        firstReferee: string;
+        secondReferee: string;
     }>;
     createMany({ matches, tournamentId, }: {
         matches: {
@@ -46,6 +52,11 @@ export declare class MatchService {
             place: string;
             tournamentId: string;
             round: number;
+            time: number;
+            half: number;
+            mainReferee: string;
+            firstReferee: string;
+            secondReferee: string;
         })[];
         page: number;
         pageSize: number;
@@ -72,6 +83,11 @@ export declare class MatchService {
         place: string;
         tournamentId: string;
         round: number;
+        time: number;
+        half: number;
+        mainReferee: string;
+        firstReferee: string;
+        secondReferee: string;
     })[]>;
     findOne(id: string): Promise<{
         matchApplications: ({
@@ -88,6 +104,7 @@ export declare class MatchService {
             id: string;
             teamId: string;
             matchId: string;
+            color: string;
         })[];
         matchTimeline: {
             teamId: string;
@@ -104,8 +121,13 @@ export declare class MatchService {
         place: string;
         tournamentId: string;
         round: number;
+        time: number;
+        half: number;
+        mainReferee: string;
+        firstReferee: string;
+        secondReferee: string;
     }>;
-    update(id: string, updateTeamDto: UpdateMatchDto): Promise<{
+    update(id: string, updateMatchDto: UpdateMatchDto): Promise<{
         message: string;
     }>;
     updateApplication(UpdateMatchApplicationDto: UpdateMatchApplicationDto): Promise<{
@@ -115,25 +137,44 @@ export declare class MatchService {
         message: string;
     }>;
     preparingMatch(id: string): Promise<void>;
+    halfTimeMatch(id: string, status: 'start' | 'end'): Promise<{
+        message: string;
+    }>;
     startMatch(id: string): Promise<{
         message: string;
+    }>;
+    updateTime(): Promise<import(".prisma/client").Prisma.BatchPayload>;
+    changeTime(id: string, time: number): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.MatchStatus;
+        date: Date;
+        winnerId: string;
+        place: string;
+        tournamentId: string;
+        round: number;
+        time: number;
+        half: number;
+        mainReferee: string;
+        firstReferee: string;
+        secondReferee: string;
     }>;
     endMatch(id: string): Promise<{
         message: string;
     }>;
-    createMatchEvent(CreateMatchEventDto: any): Promise<{
+    createMatchEvent({ teamId, matchId, playerId, half, time, type, }: CreateMatchEventDto): Promise<{
         id: string;
         time: number;
         type: import(".prisma/client").$Enums.MatchEvent;
         teamId: string;
         matchId: string;
         playerId: string;
+        half: number;
     }>;
     findMatchEvents(id: string): Promise<({
         player: {
-            id: string;
-            userId: string;
-            teamId: string;
+            user: {
+                name: string;
+            };
         };
     } & {
         id: string;
@@ -142,5 +183,6 @@ export declare class MatchService {
         teamId: string;
         matchId: string;
         playerId: string;
+        half: number;
     })[]>;
 }

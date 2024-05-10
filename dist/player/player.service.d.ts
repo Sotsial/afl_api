@@ -11,6 +11,7 @@ export declare class PlayerService {
         current: number;
         pageSize: number;
         teamId?: string;
+        tournamentId?: string;
     }): Promise<{
         data: ({
             user: {
@@ -36,7 +37,10 @@ export declare class PlayerService {
         userId: string;
         teamId: string;
     }[]>;
-    getDictionary(teamId?: string): Promise<{
+    getDictionary({ teamId, tournamentId, }: {
+        teamId?: string;
+        tournamentId?: string;
+    }): Promise<{
         label: string;
         value: string;
     }[]>;

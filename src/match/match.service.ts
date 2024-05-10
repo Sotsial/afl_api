@@ -4,6 +4,8 @@ import { UpdateMatchDto } from './dto/update-match.dto';
 import { PrismaService } from '../prisma.service';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
 import { MatchStatus } from '@prisma/client';
+import { CreateMatchEventDto } from './dto/create-match-event-dto';
+import { defineWinner } from 'src/utils/utils';
 
 @Injectable()
 export class MatchService {
@@ -199,6 +201,7 @@ export class MatchService {
         teams: {
           select: { id: true, name: true },
         },
+
         matchApplications: {
           include: {
             players: true,
@@ -224,14 +227,19 @@ export class MatchService {
     return match;
   }
 
-  async update(id: string, updateTeamDto: UpdateMatchDto) {
+  async update(id: string, updateMatchDto: UpdateMatchDto) {
+    const { date, place, firstReferee, mainReferee, secondReferee } =
+      updateMatchDto;
     await this.prisma.match.update({
       where: {
         id,
       },
       data: {
-        date: updateTeamDto.date,
-        place: updateTeamDto.place,
+        date,
+        place,
+        mainReferee,
+        firstReferee,
+        secondReferee,
       },
     });
     return { message: 'Матч сохранен' };
@@ -267,6 +275,7 @@ export class MatchService {
         players: {
           set: players.map((player) => ({ id: player.id })),
         },
+        color: UpdateMatchApplicationDto.color,
       },
     });
 
@@ -274,14 +283,17 @@ export class MatchService {
   }
 
   async updateStage(id: string) {
-    const match = await this.prisma.match.findUnique({
+    const { status, half } = await this.prisma.match.findUnique({
       where: {
         id,
       },
     });
-    if (match.status === 'NotStarted') return this.preparingMatch(id);
-    else if (match.status === 'Preparation') return this.startMatch(id);
-    else if (match.status === 'Pending') return this.endMatch(id);
+    if (status === 'NotStarted') return this.preparingMatch(id);
+    else if (status === 'Preparation') return this.startMatch(id);
+    else if (status === 'Pending' && half === 1)
+      return this.halfTimeMatch(id, 'start');
+    else if (status === 'Break') return this.halfTimeMatch(id, 'end');
+    else if (status === 'Pending' && half === 2) return this.endMatch(id);
   }
 
   async preparingMatch(id: string) {
@@ -313,6 +325,33 @@ export class MatchService {
     });
   }
 
+  async halfTimeMatch(id: string, status: 'start' | 'end') {
+    if (status === 'start') {
+      await this.prisma.match.update({
+        where: {
+          id,
+        },
+        data: {
+          half: 2,
+          status: 'Break',
+          time: 20,
+        },
+      });
+      return { message: 'Перерыв' };
+    } else if (status === 'end') {
+      await this.prisma.match.update({
+        where: {
+          id,
+        },
+        data: {
+          half: 2,
+          status: 'Pending',
+        },
+      });
+      return { message: 'Второй тайм' };
+    }
+  }
+
   async startMatch(id: string) {
     const match = await this.prisma.match.findUnique({
       where: {
@@ -340,6 +379,26 @@ export class MatchService {
     return { message: 'Матч стартовал' };
   }
 
+  async updateTime() {
+    return this.prisma.match.updateMany({
+      where: { status: 'Pending' },
+      data: {
+        time: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async changeTime(id: string, time: number) {
+    return this.prisma.match.update({
+      where: { id },
+      data: {
+        time,
+      },
+    });
+  }
+
   async endMatch(id: string) {
     const match = await this.prisma.match.findUnique({
       where: {
@@ -356,30 +415,7 @@ export class MatchService {
       },
     });
 
-    const goals = match.matchTimeline.filter((el) => el.type === 'GOAL');
-
-    function countTeamGoals(goals) {
-      const teamGoals = {};
-      for (const event of goals) {
-        if (event.type === 'GOAL') {
-          const teamId = event.teamId;
-          teamGoals[teamId] = (teamGoals[teamId] || 0) + 1;
-        }
-      }
-      return teamGoals;
-    }
-
-    const teamGoals = countTeamGoals(goals);
-
-    const [firstTeam, secondTeam] = match.teams;
-
-    let winningTeamId = null;
-
-    if (teamGoals[firstTeam.id] > teamGoals[secondTeam.id]) {
-      winningTeamId = firstTeam.id;
-    } else if (teamGoals[firstTeam.id] < teamGoals[secondTeam.id]) {
-      winningTeamId = secondTeam.id;
-    }
+    const winningTeamId = defineWinner(match);
 
     await this.prisma.match.update({
       where: { id },
@@ -391,9 +427,23 @@ export class MatchService {
     return { message: 'Матч окончен' };
   }
 
-  async createMatchEvent(CreateMatchEventDto) {
+  async createMatchEvent({
+    teamId,
+    matchId,
+    playerId,
+    half,
+    time,
+    type,
+  }: CreateMatchEventDto) {
     return this.prisma.matchTimeline.create({
-      data: CreateMatchEventDto,
+      data: {
+        team: { connect: { id: teamId } },
+        match: { connect: { id: matchId } },
+        player: { connect: { id: playerId } },
+        half,
+        time,
+        type,
+      },
     });
   }
 
@@ -403,7 +453,11 @@ export class MatchService {
         matchId: id,
       },
       include: {
-        player: true,
+        player: {
+          select: {
+            user: { select: { name: true } },
+          },
+        },
       },
     });
   }

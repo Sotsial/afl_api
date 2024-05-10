@@ -13,6 +13,7 @@ exports.TournamentService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
 const match_service_1 = require("../match/match.service");
+const utils_1 = require("../utils/utils");
 let TournamentService = class TournamentService {
     constructor(prisma, matchService) {
         this.prisma = prisma;
@@ -91,7 +92,7 @@ let TournamentService = class TournamentService {
             select: {
                 match: {
                     where: {
-                        status: 'Completed',
+                        status: { notIn: ['NotStarted', 'Suspended', 'Preparation'] },
                     },
                     include: {
                         matchTimeline: {
@@ -107,8 +108,14 @@ let TournamentService = class TournamentService {
         });
         const table = tournament.teamIds.map((team) => {
             const myMathes = tournament.match.filter((match) => match.teams.some((el) => el.id === team.id));
+            myMathes.forEach((el) => {
+                if (el.status === 'Pending' || el.status === 'Break') {
+                    el.winnerId = (0, utils_1.defineWinner)(el);
+                }
+            });
+            const liveMatch = myMathes.find((el) => el.status === 'Pending' || el.status === 'Break')?.id;
             const results = countGoalsAndResultsWithPoints(myMathes, team.id);
-            return { ...team, ...results };
+            return { ...team, ...results, liveMatch };
         });
         table.sort((a, b) => {
             if (a.points < b.points)

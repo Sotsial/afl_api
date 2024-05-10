@@ -3,5 +3,8 @@ declare const UpdateMatchDto_base: import("@nestjs/common").Type<Partial<CreateM
 export declare class UpdateMatchDto extends UpdateMatchDto_base {
     date: Date;
     place: string;
+    mainReferee: string;
+    firstReferee: string;
+    secondReferee: string;
 }
 export {};

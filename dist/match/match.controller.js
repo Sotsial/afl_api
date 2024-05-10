@@ -19,6 +19,7 @@ const create_match_dto_1 = require("./dto/create-match.dto");
 const update_match_dto_1 = require("./dto/update-match.dto");
 const update_match_application_dto_1 = require("./dto/update-match-application.dto");
 const public_decorator_1 = require("../decorators/public.decorator");
+const create_match_event_dto_1 = require("./dto/create-match-event-dto");
 let MatchController = class MatchController {
     constructor(matchService) {
         this.matchService = matchService;
@@ -38,20 +39,23 @@ let MatchController = class MatchController {
     findAll(dto) {
         return this.matchService.findAll(dto);
     }
-    updateApplication(UpdateMatchApplicationDto) {
-        return this.matchService.updateApplication(UpdateMatchApplicationDto);
+    updateApplication(updateMatchApplicationDto) {
+        return this.matchService.updateApplication(updateMatchApplicationDto);
     }
     updateStage(id) {
         return this.matchService.updateStage(id);
     }
-    createMatchEvent(CreateMatchEventDto) {
-        return this.matchService.createMatchEvent(CreateMatchEventDto);
+    createMatchEvent(createMatchEventDto) {
+        return this.matchService.createMatchEvent(createMatchEventDto);
     }
     findMatchEvents(matchId) {
         return this.matchService.findMatchEvents(matchId);
     }
     update(id, updateMatchDto) {
         return this.matchService.update(id, updateMatchDto);
+    }
+    changeTime(id, time) {
+        return this.matchService.changeTime(id, time);
     }
 };
 exports.MatchController = MatchController;
@@ -104,7 +108,7 @@ __decorate([
     (0, common_1.Post)('event'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_match_event_dto_1.CreateMatchEventDto]),
     __metadata("design:returntype", void 0)
 ], MatchController.prototype, "createMatchEvent", null);
 __decorate([
@@ -123,6 +127,14 @@ __decorate([
     __metadata("design:paramtypes", [String, update_match_dto_1.UpdateMatchDto]),
     __metadata("design:returntype", void 0)
 ], MatchController.prototype, "update", null);
+__decorate([
+    (0, common_1.Patch)('time/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('time')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MatchController.prototype, "changeTime", null);
 exports.MatchController = MatchController = __decorate([
     (0, common_1.Controller)('match'),
     __metadata("design:paramtypes", [match_service_1.MatchService])

@@ -40,6 +40,11 @@ export declare class TeamController {
             place: string;
             tournamentId: string;
             round: number;
+            time: number;
+            half: number;
+            mainReferee: string;
+            firstReferee: string;
+            secondReferee: string;
         }[];
         players: ({
             user: {

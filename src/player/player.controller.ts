@@ -35,8 +35,8 @@ export class PlayerController {
 
   @Public()
   @Get('dictionary')
-  getDictionary(@Query('teamId') teamId) {
-    return this.playerService.getDictionary(teamId);
+  getDictionary(@Query() query) {
+    return this.playerService.getDictionary(query);
   }
 
   @Public()

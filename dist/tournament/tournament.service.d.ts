@@ -48,6 +48,7 @@ export declare class TournamentService {
         startDate: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     getTable(id: string): Promise<{
+        liveMatch: string;
         scored: number;
         conceded: number;
         difference: number;

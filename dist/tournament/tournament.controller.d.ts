@@ -60,6 +60,7 @@ export declare class TournamentController {
         startDate: Date;
     }>;
     getTable(id: string): Promise<{
+        liveMatch: string;
         scored: number;
         conceded: number;
         difference: number;

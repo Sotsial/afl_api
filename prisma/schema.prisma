@@ -81,6 +81,11 @@ model Match {
   tournament Tournament @relation(fields: [tournamentId],references: [id])
   tournamentId String
   round Int
+  time Int @default(0)
+  half Int @default(1)
+  mainReferee String?
+  firstReferee String?
+  secondReferee String?
 }
 
 model MatchApplication {
@@ -90,6 +95,7 @@ model MatchApplication {
   match Match @relation(fields: [matchId],references: [id])
   matchId String
   players Player[]
+  color String?
 }
 model MatchTimeline {
   id  String  @id @default(uuid())
@@ -101,6 +107,7 @@ model MatchTimeline {
   matchId String
   player Player @relation(fields: [playerId],references: [id])
   playerId String
+  half Int @default(1)
 }
 
 enum MatchEvent {
@@ -118,6 +125,8 @@ enum TournamentStatus {
 enum MatchStatus {
   NotStarted
   Preparation
-  Completed
   Pending
+  Break
+  Suspended
+  Completed
 }

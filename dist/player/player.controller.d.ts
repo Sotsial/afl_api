@@ -34,7 +34,7 @@ export declare class PlayerController {
         userId: string;
         teamId: string;
     }[]>;
-    getDictionary(teamId: any): Promise<{
+    getDictionary(query: any): Promise<{
         label: string;
         value: string;
     }[]>;
