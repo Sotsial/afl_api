@@ -42,7 +42,6 @@ export class TeamService {
     tournamentApplicationId?: string;
   }) {
     const whereCondition: any = {};
-
     if (tournamentApplicationId) {
       whereCondition.tournamentApplications = {
         some: { tournamentId: tournamentApplicationId },

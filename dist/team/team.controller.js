@@ -30,8 +30,8 @@ let TeamController = class TeamController {
     findAll() {
         return this.teamService.findAll();
     }
-    getDictionary(params) {
-        return this.teamService.getDictionary(params);
+    getDictionary(query) {
+        return this.teamService.getDictionary(query);
     }
     findOne(id) {
         return this.teamService.findOne(id);
@@ -67,7 +67,7 @@ __decorate([
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Get)('dictionary'),
-    __param(0, (0, common_1.Param)()),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)

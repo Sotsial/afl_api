@@ -21,7 +21,7 @@ export declare class TeamController {
         name: string;
         capitanId: string;
     }[]>;
-    getDictionary(params: any): Promise<{
+    getDictionary(query: any): Promise<{
         label: string;
         value: string;
     }[]>;

@@ -110,13 +110,17 @@ let PlayerService = class PlayerService {
         return this.prisma.player.findMany();
     }
     async getDictionary({ teamId, tournamentId, }) {
+        const whereCondition = {};
+        if (tournamentId) {
+            whereCondition.tournamentApplications = {
+                some: { tournamentId },
+            };
+        }
+        if (teamId) {
+            whereCondition.teamId = teamId;
+        }
         const list = await this.prisma.player.findMany({
-            where: {
-                teamId,
-                tournamentApplications: {
-                    some: { tournamentId },
-                },
-            },
+            where: whereCondition,
             select: {
                 id: true,
                 user: true,

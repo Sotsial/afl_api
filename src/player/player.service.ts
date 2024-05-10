@@ -129,13 +129,18 @@ export class PlayerService {
     teamId?: string;
     tournamentId?: string;
   }) {
+    const whereCondition: any = {};
+    if (tournamentId) {
+      whereCondition.tournamentApplications = {
+        some: { tournamentId },
+      };
+    }
+    if (teamId) {
+      whereCondition.teamId = teamId;
+    }
+
     const list = await this.prisma.player.findMany({
-      where: {
-        teamId,
-        tournamentApplications: {
-          some: { tournamentId },
-        },
-      },
+      where: whereCondition,
       select: {
         id: true,
         user: true,
