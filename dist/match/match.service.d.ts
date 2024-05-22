@@ -92,8 +92,8 @@ export declare class MatchService {
             teamId: string;
         }[];
         teams: {
-            id: string;
             name: string;
+            id: string;
         }[];
     } & {
         id: string;
@@ -113,10 +113,13 @@ export declare class MatchService {
         secondReferee: string;
     })[]>;
     findOne(id: string): Promise<{
+        matchTimeline: {
+            teamId: string;
+        }[];
         matchApplications: ({
             team: {
-                id: string;
                 name: string;
+                id: string;
             };
             players: {
                 id: string;
@@ -129,12 +132,9 @@ export declare class MatchService {
             matchId: string;
             color: string;
         })[];
-        matchTimeline: {
-            teamId: string;
-        }[];
         teams: {
-            id: string;
             name: string;
+            id: string;
         }[];
     } & {
         id: string;

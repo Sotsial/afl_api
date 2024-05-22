@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { TeamModule } from './team/team.module';
 import { TournamentModule } from './tournament/tournament.module';
 import { PlayerModule } from './player/player.module';
@@ -13,6 +13,7 @@ import { BackgroundTasksModule } from './background-tasks/background-tasks.modul
 import { GroupModule } from './group/group.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SeederModule } from './seeder/seeder.module';
+import { SeederService } from './seeder/seeder.service';
 
 @Module({
   imports: [
@@ -39,11 +40,9 @@ import { SeederModule } from './seeder/seeder.module';
     },
   ],
 })
-export class AppModule {}
-// export class AppModule implements OnModuleInit {
-//   // constructor(private readonly seederService: SeederService) {}
-
-//   // async onModuleInit() {
-//   //   await this.seederService.seed();
-//   // }
-// }
+export class AppModule implements OnModuleInit {
+  constructor(private readonly seederService: SeederService) {}
+  async onModuleInit() {
+    await this.seederService.seed();
+  }
+}

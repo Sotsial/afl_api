@@ -66,10 +66,13 @@ export declare class MatchController {
         total: number;
     }>;
     findOne(id: string): Promise<{
+        matchTimeline: {
+            teamId: string;
+        }[];
         matchApplications: ({
             team: {
-                id: string;
                 name: string;
+                id: string;
             };
             players: {
                 id: string;
@@ -82,12 +85,9 @@ export declare class MatchController {
             matchId: string;
             color: string;
         })[];
-        matchTimeline: {
-            teamId: string;
-        }[];
         teams: {
-            id: string;
             name: string;
+            id: string;
         }[];
     } & {
         id: string;
@@ -111,8 +111,8 @@ export declare class MatchController {
             teamId: string;
         }[];
         teams: {
-            id: string;
             name: string;
+            id: string;
         }[];
     } & {
         id: string;
