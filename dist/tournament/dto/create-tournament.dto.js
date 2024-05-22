@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateTournamentDto = void 0;
+const client_1 = require("@prisma/client");
 const class_validator_1 = require("class-validator");
 class CreateTournamentDto {
 }
@@ -19,4 +20,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateTournamentDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(client_1.MatchType),
+    __metadata("design:type", String)
+], CreateTournamentDto.prototype, "matchType", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(client_1.TournamentType),
+    __metadata("design:type", String)
+], CreateTournamentDto.prototype, "tournamentType", void 0);
 //# sourceMappingURL=create-tournament.dto.js.map

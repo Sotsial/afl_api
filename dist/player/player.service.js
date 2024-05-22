@@ -34,7 +34,7 @@ let PlayerService = class PlayerService {
                 }
                 const pass = await argon2.hash(password);
                 const user = await tx.user.create({
-                    data: { email, name, password: pass },
+                    data: { email: email.toLowerCase(), name, password: pass },
                 });
                 const player = await tx.player.create({
                     data: {

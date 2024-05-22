@@ -2,11 +2,14 @@ import { Module } from '@nestjs/common';
 import { TournamentService } from './tournament.service';
 import { TournamentController } from './tournament.controller';
 import { PrismaService } from '../prisma.service';
-import { MatchModule } from '../match/match.module';
+import { GroupModule } from 'src/group/group.module';
+import { GroupEndListener } from './listeners/group-end.listener';
+import { MatchModule } from 'src/match/match.module';
 
 @Module({
   controllers: [TournamentController],
-  providers: [TournamentService, PrismaService],
-  imports: [MatchModule],
+  providers: [TournamentService, PrismaService, GroupEndListener],
+  exports: [TournamentService],
+  imports: [GroupModule, MatchModule],
 })
 export class TournamentModule {}

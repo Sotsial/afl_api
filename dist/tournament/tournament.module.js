@@ -11,6 +11,8 @@ const common_1 = require("@nestjs/common");
 const tournament_service_1 = require("./tournament.service");
 const tournament_controller_1 = require("./tournament.controller");
 const prisma_service_1 = require("../prisma.service");
+const group_module_1 = require("../group/group.module");
+const group_end_listener_1 = require("./listeners/group-end.listener");
 const match_module_1 = require("../match/match.module");
 let TournamentModule = class TournamentModule {
 };
@@ -18,8 +20,9 @@ exports.TournamentModule = TournamentModule;
 exports.TournamentModule = TournamentModule = __decorate([
     (0, common_1.Module)({
         controllers: [tournament_controller_1.TournamentController],
-        providers: [tournament_service_1.TournamentService, prisma_service_1.PrismaService],
-        imports: [match_module_1.MatchModule],
+        providers: [tournament_service_1.TournamentService, prisma_service_1.PrismaService, group_end_listener_1.GroupEndListener],
+        exports: [tournament_service_1.TournamentService],
+        imports: [group_module_1.GroupModule, match_module_1.MatchModule],
     })
 ], TournamentModule);
 //# sourceMappingURL=tournament.module.js.map

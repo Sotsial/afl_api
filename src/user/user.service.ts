@@ -17,7 +17,7 @@ export class UserService {
 
   async findOne(email: string) {
     return await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
       include: { player: true },
     });
   }

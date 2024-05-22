@@ -40,12 +40,15 @@ export declare class TeamService {
         };
         match: {
             id: string;
+            type: import(".prisma/client").$Enums.MatchType;
             status: import(".prisma/client").$Enums.MatchStatus;
+            groupId: string;
+            tournamentId: string;
             date: Date;
             winnerId: string;
             place: string;
-            tournamentId: string;
             round: number;
+            step: number;
             time: number;
             half: number;
             mainReferee: string;

@@ -3,13 +3,17 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { PrismaService } from '../prisma.service';
 import { UpdateMatchApplicationDto } from './dto/update-match-application.dto';
-import { MatchStatus } from '@prisma/client';
+import { MatchStatus, MatchType } from '@prisma/client';
 import { CreateMatchEventDto } from './dto/create-match-event-dto';
 import { defineWinner } from 'src/utils/utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class MatchService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(createMatchDto: CreateMatchDto) {
     // Validate tournament existence
@@ -31,7 +35,8 @@ export class MatchService {
     const match = await this.prisma.match.create({
       data: {
         teams: { connect: teams },
-        tournament: { connect: tournament },
+        type: tournament.matchType,
+        tournament: { connect: { id: createMatchDto.tournamentId } },
         matchApplications: {
           createMany: { data: teams.map((team) => ({ teamId: team.id })) },
         },
@@ -44,43 +49,49 @@ export class MatchService {
 
   async createMany({
     matches,
+    groupId,
     tournamentId,
+    type,
   }: {
-    matches: { teams: string[]; round: number }[];
+    matches: { teamIds: string[]; round: number; step?: number }[];
+    groupId?: string;
     tournamentId: string;
+    type: MatchType;
   }) {
-    const matchesData = await Promise.all(
-      matches.map(async (el) => {
-        return {
-          ...el,
-          teamIds: el.teams,
-          tournamentId,
-          round: el.round,
-        };
-      }),
-    );
-
     try {
-      await this.prisma.$transaction(async (tx) => {
-        for (const match of matchesData) {
-          await tx.match.create({
-            data: {
-              teams: { connect: match.teamIds.flatMap((el) => ({ id: el })) },
-              tournament: { connect: { id: tournamentId } },
-              matchApplications: {
-                createMany: {
-                  data: match.teams.map((team) => ({ teamId: team })),
+      await this.prisma.$transaction(
+        async (tx) => {
+          const createMatchPromises = matches.map((match) => {
+            return tx.match.create({
+              data: {
+                teams: { connect: match.teamIds.map((id) => ({ id })) },
+                group: { connect: { id: groupId } },
+                tournament: { connect: { id: tournamentId } },
+                type,
+                matchApplications: {
+                  createMany: {
+                    data: match.teamIds.map((teamId) => ({ teamId })),
+                  },
                 },
+                round: match.round,
+                step: match.step,
               },
-              round: match.round,
-            },
+            });
           });
-        }
 
-        return { message: 'Жеребьевка турнира успешно создана' };
-      });
-    } catch {
-      throw new BadRequestException('Ошибка при жеребьевки турнира');
+          await Promise.all(createMatchPromises);
+
+          const group = await tx.group.findUnique({ where: { id: groupId } });
+          return group;
+        },
+        {
+          maxWait: 10000, // default: 2000
+          timeout: 20000, // default: 5000
+        },
+      );
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException('Ошибка при создании матчей');
     }
   }
 
@@ -124,7 +135,14 @@ export class MatchService {
       skip,
       include: {
         teams: true,
-        tournament: true,
+        group: {
+          select: {
+            tournament: true,
+          },
+        },
+        tournament: {
+          select: { name: true },
+        },
       },
 
       orderBy: [{ status: 'desc' }, { date: 'asc' }],
@@ -310,8 +328,9 @@ export class MatchService {
       },
     });
 
+    const minPlayer = match.type === 'FUTSAL' ? 5 : 6;
     const isInadequatePlayers = match.matchApplications.some(
-      (application) => application.players.length < 5,
+      (application) => application.players.length < minPlayer,
     );
 
     if (isInadequatePlayers)
@@ -424,6 +443,9 @@ export class MatchService {
         winnerId: winningTeamId,
       },
     });
+
+    this.eventEmitter.emit('group.end', match.tournamentId);
+
     return { message: 'Матч окончен' };
   }
 

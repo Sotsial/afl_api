@@ -8,12 +8,15 @@ export declare class MatchController {
     constructor(matchService: MatchService);
     create(createMatchDto: CreateMatchDto): Promise<{
         id: string;
+        type: import(".prisma/client").$Enums.MatchType;
         status: import(".prisma/client").$Enums.MatchStatus;
+        groupId: string;
+        tournamentId: string;
         date: Date;
         winnerId: string;
         place: string;
-        tournamentId: string;
         round: number;
+        step: number;
         time: number;
         half: number;
         mainReferee: string;
@@ -23,10 +26,18 @@ export declare class MatchController {
     findList(req: any, query: any): Promise<{
         data: ({
             tournament: {
-                id: string;
                 name: string;
-                status: import(".prisma/client").$Enums.TournamentStatus;
-                startDate: Date;
+            };
+            group: {
+                tournament: {
+                    id: string;
+                    name: string;
+                    matchType: import(".prisma/client").$Enums.MatchType;
+                    tournamentType: import(".prisma/client").$Enums.TournamentType;
+                    status: import(".prisma/client").$Enums.TournamentStatus;
+                    winnerId: string;
+                    startDate: Date;
+                };
             };
             teams: {
                 id: string;
@@ -35,12 +46,15 @@ export declare class MatchController {
             }[];
         } & {
             id: string;
+            type: import(".prisma/client").$Enums.MatchType;
             status: import(".prisma/client").$Enums.MatchStatus;
+            groupId: string;
+            tournamentId: string;
             date: Date;
             winnerId: string;
             place: string;
-            tournamentId: string;
             round: number;
+            step: number;
             time: number;
             half: number;
             mainReferee: string;
@@ -77,12 +91,15 @@ export declare class MatchController {
         }[];
     } & {
         id: string;
+        type: import(".prisma/client").$Enums.MatchType;
         status: import(".prisma/client").$Enums.MatchStatus;
+        groupId: string;
+        tournamentId: string;
         date: Date;
         winnerId: string;
         place: string;
-        tournamentId: string;
         round: number;
+        step: number;
         time: number;
         half: number;
         mainReferee: string;
@@ -99,12 +116,15 @@ export declare class MatchController {
         }[];
     } & {
         id: string;
+        type: import(".prisma/client").$Enums.MatchType;
         status: import(".prisma/client").$Enums.MatchStatus;
+        groupId: string;
+        tournamentId: string;
         date: Date;
         winnerId: string;
         place: string;
-        tournamentId: string;
         round: number;
+        step: number;
         time: number;
         half: number;
         mainReferee: string;
@@ -146,12 +166,15 @@ export declare class MatchController {
     }>;
     changeTime(id: string, time: any): Promise<{
         id: string;
+        type: import(".prisma/client").$Enums.MatchType;
         status: import(".prisma/client").$Enums.MatchStatus;
+        groupId: string;
+        tournamentId: string;
         date: Date;
         winnerId: string;
         place: string;
-        tournamentId: string;
         round: number;
+        step: number;
         time: number;
         half: number;
         mainReferee: string;

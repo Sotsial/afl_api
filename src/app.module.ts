@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { TeamModule } from './team/team.module';
 import { TournamentModule } from './tournament/tournament.module';
 import { PlayerModule } from './player/player.module';
@@ -10,6 +10,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MatchModule } from './match/match.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BackgroundTasksModule } from './background-tasks/background-tasks.module';
+import { GroupModule } from './group/group.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SeederModule } from './seeder/seeder.module';
+import { SeederService } from './seeder/seeder.service';
 
 @Module({
   imports: [
@@ -20,7 +24,10 @@ import { BackgroundTasksModule } from './background-tasks/background-tasks.modul
     UserModule,
     MatchModule,
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     BackgroundTasksModule,
+    GroupModule,
+    SeederModule,
   ],
   providers: [
     {
@@ -33,4 +40,11 @@ import { BackgroundTasksModule } from './background-tasks/background-tasks.modul
     },
   ],
 })
-export class AppModule {}
+// export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private readonly seederService: SeederService) {}
+
+  async onModuleInit() {
+    await this.seederService.seed();
+  }
+}

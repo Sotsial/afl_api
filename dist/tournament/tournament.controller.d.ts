@@ -30,12 +30,17 @@ export declare class TournamentController {
         teamId: string;
         tournamentId: string;
     })[]>;
-    createTours({ tournamentId }: createTournamentTours): Promise<any>;
+    createTours({ tournamentId }: createTournamentTours): Promise<{
+        message: string;
+    }>;
     findList(query: any): Promise<{
         data: {
             id: string;
             name: string;
+            matchType: import(".prisma/client").$Enums.MatchType;
+            tournamentType: import(".prisma/client").$Enums.TournamentType;
             status: import(".prisma/client").$Enums.TournamentStatus;
+            winnerId: string;
             startDate: Date;
         }[];
         page: number;
@@ -45,18 +50,25 @@ export declare class TournamentController {
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         name: string;
+        matchType: import(".prisma/client").$Enums.MatchType;
+        tournamentType: import(".prisma/client").$Enums.TournamentType;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        winnerId: string;
         startDate: Date;
     }[]>;
     getDictionary(): Promise<{
         label: string;
         value: string;
+        type: import(".prisma/client").$Enums.TournamentType;
     }[]>;
     findOne(id: string): Promise<{
         teamIds: string[];
         id: string;
         name: string;
+        matchType: import(".prisma/client").$Enums.MatchType;
+        tournamentType: import(".prisma/client").$Enums.TournamentType;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        winnerId: string;
         startDate: Date;
     }>;
     getTable(id: string): Promise<{
@@ -72,11 +84,14 @@ export declare class TournamentController {
         id: string;
         name: string;
         capitanId: string;
-    }[]>;
+    }[][]>;
     update(id: string, updateTournamentDto: UpdateTournamentDto): import(".prisma/client").Prisma.Prisma__TournamentClient<{
         id: string;
         name: string;
+        matchType: import(".prisma/client").$Enums.MatchType;
+        tournamentType: import(".prisma/client").$Enums.TournamentType;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        winnerId: string;
         startDate: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

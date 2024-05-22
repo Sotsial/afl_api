@@ -6,6 +6,7 @@ export class UpdateMatchDto extends PartialType(CreateMatchDto) {
   @IsDateString()
   date: Date;
 
+  @IsOptional()
   @IsString()
   place: string;
 

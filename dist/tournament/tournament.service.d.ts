@@ -2,11 +2,13 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { PrismaService } from '../prisma.service';
 import { CreateTournamentApplicationDto } from './dto/create-tournament-application.dto';
-import { MatchService } from '../match/match.service';
+import { GroupService } from 'src/group/group.service';
+import { MatchService } from 'src/match/match.service';
 export declare class TournamentService {
     private prisma;
+    private groupService;
     private matchService;
-    constructor(prisma: PrismaService, matchService: MatchService);
+    constructor(prisma: PrismaService, groupService: GroupService, matchService: MatchService);
     create(createTournamentDto: CreateTournamentDto): Promise<{
         message: string;
     }>;
@@ -17,7 +19,10 @@ export declare class TournamentService {
         data: {
             id: string;
             name: string;
+            matchType: import(".prisma/client").$Enums.MatchType;
+            tournamentType: import(".prisma/client").$Enums.TournamentType;
             status: import(".prisma/client").$Enums.TournamentStatus;
+            winnerId: string;
             startDate: Date;
         }[];
         page: number;
@@ -27,24 +32,34 @@ export declare class TournamentService {
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         name: string;
+        matchType: import(".prisma/client").$Enums.MatchType;
+        tournamentType: import(".prisma/client").$Enums.TournamentType;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        winnerId: string;
         startDate: Date;
     }[]>;
     getDictionary(): Promise<{
         label: string;
         value: string;
+        type: import(".prisma/client").$Enums.TournamentType;
     }[]>;
     findOne(id: string): Promise<{
         teamIds: string[];
         id: string;
         name: string;
+        matchType: import(".prisma/client").$Enums.MatchType;
+        tournamentType: import(".prisma/client").$Enums.TournamentType;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        winnerId: string;
         startDate: Date;
     }>;
     update(id: string, updateTournamentDto: UpdateTournamentDto): import(".prisma/client").Prisma.Prisma__TournamentClient<{
         id: string;
         name: string;
+        matchType: import(".prisma/client").$Enums.MatchType;
+        tournamentType: import(".prisma/client").$Enums.TournamentType;
         status: import(".prisma/client").$Enums.TournamentStatus;
+        winnerId: string;
         startDate: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     getTable(id: string): Promise<{
@@ -60,7 +75,7 @@ export declare class TournamentService {
         id: string;
         name: string;
         capitanId: string;
-    }[]>;
+    }[][]>;
     getApplications({ tournamentId, teamId, }: {
         tournamentId: string;
         teamId?: string;
@@ -87,5 +102,9 @@ export declare class TournamentService {
     }): Promise<{
         message: string;
     }>;
-    createTours(tournamentId: string): Promise<any>;
+    createTours(tournamentId: string): Promise<{
+        message: string;
+    }>;
+    updateStage(id: string): Promise<void>;
+    tournamentEnd(id: any, winnerId: any): Promise<void>;
 }

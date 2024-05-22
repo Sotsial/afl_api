@@ -44,7 +44,9 @@ model Team {
   matchTimeline MatchTimeline[]
   players Player[] 
   tournaments Tournament[]
+  group Group[]
   wonMatches Match[] @relation(name: "winningTeam") 
+  wonTournaments Tournament[] @relation(name: "tournamentWinner") 
   capitan Player? @relation(fields: [capitanId], references: [id], name: "capitan") 
   capitanId String? @unique 
 }
@@ -52,11 +54,24 @@ model Team {
 model Tournament {
   id  String  @id @default(uuid())
   name String 
+  matchType MatchType
+  tournamentType TournamentType
   tournamentApplications TournamentApplication[]
   status TournamentStatus @default(NotStarted)
-  match Match[]
   teamIds Team[]
+  groups Group[]
+  match Match[] 
+  winner Team? @relation(name: "tournamentWinner", fields: [winnerId], references: [id]) 
+  winnerId String?
   startDate DateTime?
+}
+
+model Group {
+  id  String  @id @default(uuid())
+  tournament Tournament @relation(fields: [tournamentId],references: [id])
+  tournamentId String
+  teamIds Team[]
+  match Match[] 
 }
 
 model TournamentApplication {
@@ -70,17 +85,21 @@ model TournamentApplication {
 
 model Match {
   id  String  @id @default(uuid())
+  type MatchType
   teams Team[] @relation(name: "participatingTeams") 
   status MatchStatus @default(NotStarted)
+  group Group? @relation(fields: [groupId], references: [id],onDelete: Cascade) 
+  groupId String?
+  tournament Tournament @relation(fields: [tournamentId], references: [id]) 
+  tournamentId String
   date DateTime?
   matchApplications MatchApplication[]
   matchTimeline MatchTimeline[]
   winner Team? @relation(name: "winningTeam", fields: [winnerId], references: [id]) 
   winnerId String?
   place String?
-  tournament Tournament @relation(fields: [tournamentId],references: [id])
-  tournamentId String
   round Int
+  step Int?
   time Int @default(0)
   half Int @default(1)
   mainReferee String?
@@ -108,6 +127,23 @@ model MatchTimeline {
   player Player @relation(fields: [playerId],references: [id])
   playerId String
   half Int @default(1)
+}
+
+model News {
+  id  String  @id @default(uuid())
+  title String
+  description String?
+}
+
+enum TournamentType {
+  CUP
+  LEAGUE
+}
+
+
+enum MatchType {
+  FUTSAL
+  MINI
 }
 
 enum MatchEvent {

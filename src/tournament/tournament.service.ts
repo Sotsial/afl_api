@@ -3,13 +3,14 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { PrismaService } from '../prisma.service';
 import { CreateTournamentApplicationDto } from './dto/create-tournament-application.dto';
-import { MatchService } from '../match/match.service';
-import { defineWinner } from 'src/utils/utils';
+import { GroupService, groupCalculate } from 'src/group/group.service';
+import { MatchService } from 'src/match/match.service';
 
 @Injectable()
 export class TournamentService {
   constructor(
     private prisma: PrismaService,
+    private groupService: GroupService,
     private matchService: MatchService,
   ) {}
 
@@ -57,9 +58,14 @@ export class TournamentService {
       select: {
         id: true,
         name: true,
+        tournamentType: true,
       },
     });
-    return list.map((el) => ({ label: el.name, value: el.id }));
+    return list.map((el) => ({
+      label: el.name,
+      value: el.id,
+      type: el.tournamentType,
+    }));
   }
 
   async findOne(id: string) {
@@ -96,52 +102,39 @@ export class TournamentService {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id },
       select: {
-        match: {
-          where: {
-            status: { notIn: ['NotStarted', 'Suspended', 'Preparation'] },
-          },
-          include: {
-            matchTimeline: {
+        groups: {
+          select: {
+            match: {
               where: {
-                type: 'GOAL',
+                status: { notIn: ['NotStarted', 'Suspended', 'Preparation'] },
+              },
+              include: {
+                matchTimeline: {
+                  where: {
+                    type: 'GOAL',
+                  },
+                },
+                teams: true,
               },
             },
-            teams: true,
+            teamIds: true,
           },
         },
         teamIds: true,
+        tournamentType: true,
       },
     });
+    if (tournament.tournamentType === 'LEAGUE') {
+      const matches = tournament.groups.flatMap((el) => el.match);
 
-    const table = tournament.teamIds.map((team) => {
-      const myMathes = tournament.match.filter((match) =>
-        match.teams.some((el) => el.id === team.id),
-      );
-
-      myMathes.forEach((el) => {
-        if (el.status === 'Pending' || el.status === 'Break') {
-          el.winnerId = defineWinner(el);
-        }
+      return [groupCalculate({ match: matches, teamIds: tournament.teamIds })];
+    } else {
+      const group = tournament.groups.map((el) => {
+        return groupCalculate({ match: el.match, teamIds: el.teamIds });
       });
-
-      const liveMatch = myMathes.find(
-        (el) => el.status === 'Pending' || el.status === 'Break',
-      )?.id;
-
-      const results = countGoalsAndResultsWithPoints(myMathes, team.id);
-
-      return { ...team, ...results, liveMatch };
-    });
-
-    table.sort((a, b) => {
-      if (a.points < b.points) return 1;
-      if (a.points > b.points) return -1;
-      if (a.difference < b.difference) return 1;
-      if (a.difference > b.difference) return -1;
-      return 0;
-    });
-
-    return table;
+      // const bracket:IStep[] = []
+      return group;
+    }
   }
 
   async getApplications({
@@ -251,26 +244,20 @@ export class TournamentService {
   }
 
   async createTours(tournamentId: string) {
-    const existingMatch = await this.prisma.match.findFirst({
-      where: { tournamentId },
-    });
-
-    if (existingMatch) {
-      throw new BadRequestException(
-        'Tournament draw has already been generated.',
-      );
-    }
-
     const tournament = await this.prisma.tournament.findUnique({
       where: { id: tournamentId },
-      select: { teamIds: true },
+      select: { teamIds: true, status: true, tournamentType: true },
     });
 
     if (!tournament) {
       throw new BadRequestException('Tournament not found.');
     }
 
-    const teamIds = tournament.teamIds.flatMap((team) => team.id);
+    if (tournament.status !== 'NotStarted') {
+      throw new BadRequestException('Tournament pending.');
+    }
+
+    const teamIds = tournament.teamIds.map((team) => team.id);
 
     if (teamIds.length < 2) {
       throw new BadRequestException('Minimum 2 teams required for tournament.');
@@ -280,49 +267,27 @@ export class TournamentService {
       throw new BadRequestException('Нечетное кол-во команд');
     }
 
-    function generateRoundRobinSchedule(teams) {
-      const numTeams = teams.length;
-      const schedule = [];
-
-      if (numTeams % 2 !== 0) {
-        teams.push('Dummy');
-      }
-
-      const numRounds = numTeams - 1;
-      const halfNumTeams = numTeams / 2;
-
-      for (let round = 0; round < numRounds; round++) {
-        const roundSchedule = [];
-
-        for (let i = 0; i < halfNumTeams; i++) {
-          const match = [teams[i], teams[numTeams - i - 1]];
-          roundSchedule.push(match);
+    try {
+      if (tournament.tournamentType === 'LEAGUE') {
+        await this.groupService.create({
+          teamIds,
+          tournamentId,
+        });
+      } else if (tournament.tournamentType === 'CUP') {
+        if (teamIds.length !== 16) {
+          throw new BadRequestException('Команд должно быть 16');
         }
 
-        schedule.push(roundSchedule);
-
-        // Rotate teams
-        teams.splice(1, 0, teams.pop());
+        const teams = Array.from({ length: teamIds.length / 4 }, (_, index) =>
+          teamIds.slice(index * 4, index * 4 + 4),
+        );
+        for (let i = 0; i < 4; i++) {
+          await this.groupService.create({
+            teamIds: teams[i],
+            tournamentId,
+          });
+        }
       }
-
-      return schedule;
-    }
-
-    // Выводим список туров
-    const tourList = generateRoundRobinSchedule(teamIds);
-
-    const matchesToCreate = tourList.flatMap((roundMatches, index) =>
-      roundMatches.map((match) => ({
-        teams: [match[0], match[1]],
-        round: index + 1,
-      })),
-    );
-
-    try {
-      await this.matchService.createMany({
-        tournamentId,
-        matches: matchesToCreate,
-      });
 
       await this.prisma.tournament.update({
         where: { id: tournamentId },
@@ -330,49 +295,112 @@ export class TournamentService {
       });
       return { message: 'Жеребьевка турнира успешно создана' };
     } catch (error) {
-      return error;
+      throw new BadRequestException(error);
     }
+  }
+
+  async updateStage(id: string) {
+    const tournament = await this.prisma.tournament.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        status: true,
+        tournamentType: true,
+        matchType: true,
+        groups: {
+          select: {
+            match: {
+              where: {
+                status: { notIn: ['NotStarted', 'Suspended', 'Preparation'] },
+              },
+              include: {
+                matchTimeline: {
+                  where: {
+                    type: 'GOAL',
+                  },
+                },
+                teams: true,
+              },
+            },
+            teamIds: true,
+          },
+        },
+      },
+    });
+
+    const matches = tournament.groups.flatMap((el) => el.match);
+
+    if (
+      tournament.status === 'Completed' &&
+      matches.length <= 0 &&
+      matches.some((el) => el.status !== 'Completed')
+    )
+      return;
+
+    if (tournament.tournamentType === 'LEAGUE') {
+      await this.tournamentEnd(id, groupCalculate(tournament.groups[0])[0].id);
+      return;
+    } else if (tournament.tournamentType === 'CUP') {
+      const isPlayOff = matches.some((el) => !el.groupId);
+
+      let teams: string[] = [];
+
+      const minStepItem = matches.reduce((min, item) => {
+        return item.step && item.step < min ? item.step : min;
+      }, 4);
+
+      if (!isPlayOff) {
+        teams = tournament.groups.flatMap((el) =>
+          groupCalculate(el)
+            .slice(0, 2)
+            .map((team) => team.id),
+        );
+      } else {
+        teams = await this.prisma.match
+          .findMany({
+            where: { tournamentId: id, step: minStepItem },
+            orderBy: [{ round: 'asc' }],
+            select: {
+              winnerId: true,
+            },
+          })
+          .then((el) => el.map((t) => t.winnerId));
+      }
+
+      const mathesStep: {
+        teamIds: string[];
+        round: number;
+        step?: number;
+      }[] = [];
+
+      for (let i = 0; i < teams.length; i += 2) {
+        mathesStep.push({
+          teamIds: [teams[i], teams[i + 1]],
+          round: i / 2 + 1, // Инкрементируем значение round
+          step: minStepItem - 1,
+        });
+      }
+
+      // this.matchService.createMany({
+      //   type: tournament.matchType,
+      //   tournamentId: id,
+      //   matches: mathesStep,
+      // });
+    }
+  }
+
+  async tournamentEnd(id, winnerId) {
+    await this.prisma.tournament.update({
+      where: {
+        id,
+      },
+      data: {
+        status: 'Completed',
+        winner: {
+          connect: { id: winnerId },
+        },
+      },
+    });
   }
 }
-
-const countGoalsAndResultsWithPoints = (matches, teamId) => {
-  let goalsScored = 0;
-  let goalsConceded = 0;
-  let wins = 0;
-  let draws = 0;
-  let losses = 0;
-  let points = 0;
-
-  for (const match of matches) {
-    for (const event of match.matchTimeline) {
-      if (event.type === 'GOAL') {
-        if (event.teamId === teamId) {
-          goalsScored++;
-        } else {
-          goalsConceded++;
-        }
-      }
-    }
-
-    if (match.winnerId === teamId) {
-      wins++;
-      points += 3;
-    } else if (match.winnerId === null) {
-      draws++;
-      points += 1;
-    } else {
-      losses++;
-    }
-  }
-
-  return {
-    scored: goalsScored,
-    conceded: goalsConceded,
-    difference: goalsScored - goalsConceded,
-    matches: matches.length,
-    wins: wins,
-    draws: draws,
-    losses: losses,
-    points: points,
-  };
-};
