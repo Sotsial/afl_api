@@ -76,4 +76,9 @@ export class MatchController {
   changeTime(@Param('id') id: string, @Body('time') time) {
     return this.matchService.changeTime(id, time);
   }
+
+  @Post('autoplay/:id')
+  autoPlay(@Param('id') id: string) {
+    return this.matchService.autoPlayMatch(id);
+  }
 }

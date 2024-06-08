@@ -14,13 +14,15 @@ export class GroupService {
   async create({
     tournamentId,
     teamIds,
+    winnerCount,
   }: {
     tournamentId: string;
     teamIds: string[];
+    winnerCount?: number;
   }) {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id: tournamentId },
-      select: { teamIds: true, matchType: true },
+      select: { teams: true, matchType: true },
     });
 
     if (!tournament) {
@@ -71,7 +73,8 @@ export class GroupService {
       const group = await this.prisma.group.create({
         data: {
           tournamentId,
-          teamIds: { connect: teamIds.map((id) => ({ id })) },
+          teams: { connect: teamIds.map((id) => ({ id })) },
+          winnerCount,
         },
       });
       return await this.matchService.createMany({
@@ -87,7 +90,7 @@ export class GroupService {
 }
 
 export const groupCalculate = (group: {
-  teamIds: Team[];
+  teams: Team[];
   match: {
     id: string;
     teams: Team[];
@@ -99,7 +102,7 @@ export const groupCalculate = (group: {
   const mathes = group.match.filter(
     (el) => !['NotStarted', 'Suspended', 'Preparation'].includes(el.status),
   );
-  const table = group.teamIds.map((team) => {
+  const table = group.teams.map((team) => {
     const myMathes = mathes.filter((match) =>
       match.teams.some((el) => el.id === team.id),
     );

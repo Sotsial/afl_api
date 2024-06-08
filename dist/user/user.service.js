@@ -26,8 +26,38 @@ let UserService = class UserService {
     async findOne(email) {
         return await this.prisma.user.findUnique({
             where: { email: email.toLowerCase() },
-            include: { player: true },
         });
+    }
+    async findAll({ where }) {
+        return this.prisma.user.findMany({ where });
+    }
+    async findList(query, where) {
+        const { pageSize = 10, current = 1 } = query;
+        const pageNumber = Math.max(1, current);
+        const skip = (pageNumber - 1) * pageSize;
+        const take = +pageSize;
+        const results = await this.prisma.user.findMany({
+            take,
+            skip,
+            where,
+        });
+        const totalCount = await this.prisma.user.count();
+        return {
+            data: results,
+            page: pageNumber,
+            pageSize,
+            total: totalCount,
+        };
+    }
+    async getDictionary(where) {
+        const list = await this.prisma.user.findMany({
+            where,
+            select: {
+                id: true,
+                name: true,
+            },
+        });
+        return list.map((el) => ({ label: el.name, value: el.id }));
     }
     async update(id, updateUserDto) {
         return this.prisma.user.update({

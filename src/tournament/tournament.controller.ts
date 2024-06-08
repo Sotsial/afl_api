@@ -51,7 +51,7 @@ export class TournamentController {
   findList(@Query() query) {
     return this.tournamentService.findList(query);
   }
-
+  @Public()
   @Get()
   findAll() {
     return this.tournamentService.findAll();

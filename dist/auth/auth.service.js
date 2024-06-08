@@ -32,10 +32,10 @@ let AuthService = class AuthService {
         throw new common_1.BadRequestException('Неверный логин или пароль');
     }
     async login(user) {
-        const { email, id, role, name, player } = user;
+        const { email, id, role, name, teamId } = user;
         let isCapitan = false;
-        if (role === 'PLAYER' && player) {
-            const { captainedTeam } = await this.playersService.findOne(player.id);
+        if (role === 'PLAYER' && teamId) {
+            const { captainedTeam } = await this.playersService.findOne(user.id);
             isCapitan = !!captainedTeam;
         }
         return {
@@ -44,7 +44,7 @@ let AuthService = class AuthService {
                 email,
                 role,
                 name,
-                teamId: player?.teamId,
+                teamId,
                 isCapitan,
             }),
         };

@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SeederService = void 0;
+const faker_1 = require("@faker-js/faker");
 const common_1 = require("@nestjs/common");
 const player_service_1 = require("../player/player.service");
 const prisma_service_1 = require("../prisma.service");
@@ -22,6 +23,50 @@ let SeederService = class SeederService {
         this.usedNames = new Set();
     }
     async seed() {
+        const teamCount = await this.prisma.team.count();
+        if (teamCount < 16) {
+            for (let t = 0; t < teamsNames.length; t++) {
+                const team = await this.prisma.team.create({
+                    data: {
+                        name: teamsNames[t],
+                    },
+                });
+                for (let i = 0; i < 9; i++) {
+                    let name = faker_1.faker.person.firstName('male');
+                    while (this.usedNames.has(name)) {
+                        name = faker_1.faker.person.firstName('male');
+                    }
+                    this.usedNames.add(name);
+                    await this.playerService.create({
+                        name,
+                        email: `${name}@test.ru`,
+                        password: 'P@ssw0rd',
+                        teamId: team.id,
+                    });
+                }
+            }
+        }
+        const tournamentCount = await this.prisma.tournament.count();
+        if (tournamentCount < 3) {
+            const league = await this.prisma.tournament.create({
+                data: {
+                    name: 'Astana League',
+                    matchType: 'FUTSAL',
+                    tournamentType: 'LEAGUE',
+                },
+            });
+            const teams = await this.prisma.team.findMany({
+                take: 16,
+                select: { id: true, players: { select: { id: true } } },
+            });
+            for (let i = 0; i < teams.length; i++) {
+                await this.tournamentService.createApplication({
+                    tournamentId: league.id,
+                    teamId: teams[i].id,
+                    playerIds: teams[i].players.map((el) => el.id),
+                });
+            }
+        }
     }
 };
 exports.SeederService = SeederService;
@@ -31,4 +76,26 @@ exports.SeederService = SeederService = __decorate([
         player_service_1.PlayerService,
         tournament_service_1.TournamentService])
 ], SeederService);
+const teamsNames = [
+    'Реал Мадрид',
+    'Барселона',
+    'Манчестер Юнайтед',
+    'Бавария',
+    'Ливерпуль',
+    'Ювентус',
+    'Пари Сен-Жермен',
+    'Челси',
+    'Манчестер Сити',
+    'Интернационале',
+    'Аякс',
+    'Реал Бетис',
+    'Милан',
+    'Бенфика',
+    'Боруссия Дортмунд',
+    'Атлетико Мадрид',
+    'Тоттенхэм Хотспур',
+    'Наполи',
+    'Лестер Сити',
+    'Севилья',
+];
 //# sourceMappingURL=seeder.service.js.map

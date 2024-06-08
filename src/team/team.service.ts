@@ -62,17 +62,11 @@ export class TeamService {
     const team = await this.prisma.team.findUnique({
       where: { id },
       include: {
-        players: {
-          include: {
-            user: true,
-          },
-        },
+        players: true,
         match: { where: { status: 'Completed' } },
         capitan: {
           select: {
-            user: {
-              select: { name: true },
-            },
+            name: true,
           },
         },
       },

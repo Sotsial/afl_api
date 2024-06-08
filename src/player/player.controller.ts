@@ -7,10 +7,11 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { PlayerService } from './player.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { Public } from '../decorators/public.decorator';
+import { PlayerService } from './player.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('player')
 export class PlayerController {
@@ -29,13 +30,13 @@ export class PlayerController {
   }
 
   @Get()
-  findAll() {
-    return this.playerService.findAll();
+  findAll(@Query() query: Prisma.UserWhereInput) {
+    return this.playerService.findAll({ where: query });
   }
 
   @Public()
   @Get('dictionary')
-  getDictionary(@Query() query) {
+  getDictionary(@Query() query: { teamId?: string; tournamentId?: string }) {
     return this.playerService.getDictionary(query);
   }
 

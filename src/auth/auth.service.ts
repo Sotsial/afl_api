@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { Player, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { PlayerService } from 'src/player/player.service';
 
 @Injectable()
@@ -25,13 +25,13 @@ export class AuthService {
     throw new BadRequestException('Неверный логин или пароль');
   }
 
-  async login(user: User & { player: Player }) {
-    const { email, id, role, name, player } = user;
+  async login(user: User) {
+    const { email, id, role, name, teamId } = user;
 
     let isCapitan = false;
 
-    if (role === 'PLAYER' && player) {
-      const { captainedTeam } = await this.playersService.findOne(player.id);
+    if (role === 'PLAYER' && teamId) {
+      const { captainedTeam } = await this.playersService.findOne(user.id);
 
       isCapitan = !!captainedTeam;
     }
@@ -42,7 +42,7 @@ export class AuthService {
         email,
         role,
         name,
-        teamId: player?.teamId,
+        teamId,
         isCapitan,
       }),
     };

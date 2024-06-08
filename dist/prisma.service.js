@@ -9,9 +9,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
+const argon2 = require("argon2");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleInit() {
         await this.$connect();
+        const email = 'admin@test.ru';
+        const defaultUser = await this.user.findUnique({
+            where: { email },
+        });
+        if (!defaultUser) {
+            const password = await argon2.hash('P@ssw0rd');
+            await this.user.create({
+                data: {
+                    email,
+                    role: 'ADMIN',
+                    name: 'Admin',
+                    password,
+                },
+            });
+        }
     }
 };
 exports.PrismaService = PrismaService;

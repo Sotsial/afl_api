@@ -12,7 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreatePlayerDto = void 0;
 const class_validator_1 = require("class-validator");
 const create_user_dto_1 = require("../../user/dto/create-user.dto");
-class CreatePlayerDto extends create_user_dto_1.CreateUserDto {
+const swagger_1 = require("@nestjs/swagger");
+class CreatePlayerDto extends (0, swagger_1.OmitType)(create_user_dto_1.CreateUserDto, ['role']) {
 }
 exports.CreatePlayerDto = CreatePlayerDto;
 __decorate([

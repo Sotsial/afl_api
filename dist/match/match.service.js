@@ -47,25 +47,30 @@ let MatchService = class MatchService {
         try {
             await this.prisma.$transaction(async (tx) => {
                 const createMatchPromises = matches.map((match) => {
-                    return tx.match.create({
-                        data: {
-                            teams: { connect: match.teamIds.map((id) => ({ id })) },
-                            group: { connect: { id: groupId } },
-                            tournament: { connect: { id: tournamentId } },
-                            type,
-                            matchApplications: {
-                                createMany: {
-                                    data: match.teamIds.map((teamId) => ({ teamId })),
-                                },
+                    const matchData = {
+                        teams: { connect: match.teamIds.map((id) => ({ id })) },
+                        tournament: { connect: { id: tournamentId } },
+                        type,
+                        matchApplications: {
+                            createMany: {
+                                data: match.teamIds.map((teamId) => ({ teamId })),
                             },
-                            round: match.round,
-                            step: match.step,
                         },
+                        round: match.round,
+                        step: match.step,
+                    };
+                    if (groupId) {
+                        matchData['group'] = { connect: { id: groupId } };
+                    }
+                    return tx.match.create({
+                        data: matchData,
                     });
                 });
                 await Promise.all(createMatchPromises);
-                const group = await tx.group.findUnique({ where: { id: groupId } });
-                return group;
+                if (groupId) {
+                    const group = await tx.group.findUnique({ where: { id: groupId } });
+                    return group;
+                }
             }, {
                 maxWait: 10000,
                 timeout: 20000,
@@ -88,19 +93,16 @@ let MatchService = class MatchService {
                     id: query.userId,
                 },
                 select: {
-                    player: {
-                        select: {
-                            teamId: true,
-                        },
-                    },
+                    teamId: true,
                 },
             });
         }
+        const teamId = user?.teamId ?? undefined;
         const results = await this.prisma.match.findMany({
             where: {
                 teams: {
                     some: {
-                        id: user?.player?.teamId,
+                        id: teamId,
                     },
                 },
             },
@@ -215,7 +217,7 @@ let MatchService = class MatchService {
         if (match.status !== 'NotStarted') {
             throw new common_1.BadRequestException('Прием заявок завершен');
         }
-        const players = await this.prisma.player.findMany({
+        const players = await this.prisma.user.findMany({
             where: {
                 id: {
                     in: UpdateMatchApplicationDto.playerIds,
@@ -387,13 +389,67 @@ let MatchService = class MatchService {
                 matchId: id,
             },
             include: {
-                player: {
-                    select: {
-                        user: { select: { name: true } },
-                    },
-                },
+                player: { select: { name: true } },
             },
         });
+    }
+    async autoPlayMatch(id) {
+        const match = await this.prisma.match.findUnique({
+            where: { id },
+            select: { id: true, matchApplications: true, teams: true, step: true },
+        });
+        const matchId = match.id;
+        for (const { id, teamId } of match.matchApplications) {
+            const players = await this.prisma.user.findMany({
+                where: { teamId },
+                select: { id: true },
+            });
+            await this.updateApplication({
+                id,
+                color: 'red',
+                playerIds: players.map((el) => el.id),
+            });
+        }
+        await this.update(matchId, {
+            date: new Date(),
+            place: 'Сауран',
+            firstReferee: 'firstReferee',
+            mainReferee: 'mainReferee',
+            secondReferee: 'secondReferee',
+        });
+        await this.preparingMatch(matchId);
+        await this.startMatch(matchId);
+        let randomTimes;
+        if (match.step) {
+            randomTimes = Math.floor(Math.random() * 3) * 2 + 1;
+        }
+        else {
+            randomTimes = Math.floor(Math.random() * 6);
+        }
+        for (let i = 0; i < randomTimes; i++) {
+            const randomIndex = Math.floor(Math.random() * 2);
+            const randomTeam = match.teams[randomIndex];
+            const players = await this.prisma.user.findMany({
+                where: {
+                    teamId: randomTeam.id,
+                    matchApplications: {
+                        some: { id: { in: match.matchApplications.map((el) => el.id) } },
+                    },
+                },
+                select: { id: true },
+            });
+            const randomPlayer = players[Math.floor(Math.random() * players.length)];
+            await this.createMatchEvent({
+                half: 1,
+                matchId,
+                type: 'GOAL',
+                time: Math.floor(Math.random() * 20),
+                teamId: randomTeam.id,
+                playerId: randomPlayer.id,
+            });
+        }
+        await this.halfTimeMatch(id, 'end');
+        await this.endMatch(id);
     }
 };
 exports.MatchService = MatchService;

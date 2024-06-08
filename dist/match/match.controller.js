@@ -57,6 +57,9 @@ let MatchController = class MatchController {
     changeTime(id, time) {
         return this.matchService.changeTime(id, time);
     }
+    autoPlay(id) {
+        return this.matchService.autoPlayMatch(id);
+    }
 };
 exports.MatchController = MatchController;
 __decorate([
@@ -135,6 +138,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], MatchController.prototype, "changeTime", null);
+__decorate([
+    (0, common_1.Post)('autoplay/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MatchController.prototype, "autoPlay", null);
 exports.MatchController = MatchController = __decorate([
     (0, common_1.Controller)('match'),
     __metadata("design:paramtypes", [match_service_1.MatchService])

@@ -5,13 +5,14 @@ export declare class GroupService {
     private prisma;
     private matchService;
     constructor(prisma: PrismaService, matchService: MatchService);
-    create({ tournamentId, teamIds, }: {
+    create({ tournamentId, teamIds, winnerCount, }: {
         tournamentId: string;
         teamIds: string[];
+        winnerCount?: number;
     }): Promise<void>;
 }
 export declare const groupCalculate: (group: {
-    teamIds: Team[];
+    teams: Team[];
     match: {
         id: string;
         teams: Team[];
@@ -30,6 +31,8 @@ export declare const groupCalculate: (group: {
     losses: number;
     points: number;
     id: string;
+    createdAt: Date;
+    updatedAt: Date;
     name: string;
     capitanId: string;
 }[];

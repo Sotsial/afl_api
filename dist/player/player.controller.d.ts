@@ -1,6 +1,7 @@
-import { PlayerService } from './player.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
+import { PlayerService } from './player.service';
+import { Prisma } from '@prisma/client';
 export declare class PlayerController {
     private readonly playerService;
     constructor(playerService: PlayerService);
@@ -11,9 +12,6 @@ export declare class PlayerController {
         teamId?: string;
     }): Promise<{
         data: ({
-            user: {
-                name: string;
-            };
             team: {
                 name: string;
             };
@@ -22,19 +20,28 @@ export declare class PlayerController {
             }[];
         } & {
             id: string;
-            userId: string;
+            email: string;
+            name: string;
+            password: string;
+            role: import(".prisma/client").$Enums.Role;
             teamId: string;
         })[];
         page: number;
         pageSize: number;
         total: number;
     }>;
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(query: Prisma.UserWhereInput): Promise<{
         id: string;
-        userId: string;
+        email: string;
+        name: string;
+        password: string;
+        role: import(".prisma/client").$Enums.Role;
         teamId: string;
     }[]>;
-    getDictionary(query: any): Promise<{
+    getDictionary(query: {
+        teamId?: string;
+        tournamentId?: string;
+    }): Promise<{
         label: string;
         value: string;
     }[]>;
@@ -43,28 +50,33 @@ export declare class PlayerController {
             matches: number;
             goals: number;
         };
-        user: {
-            id: string;
-            email: string;
-            name: string;
-            password: string;
-            role: import(".prisma/client").$Enums.Role;
-        };
         team: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             capitanId: string;
         };
         captainedTeam: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             capitanId: string;
         };
         id: string;
-        userId: string;
+        email: string;
+        name: string;
+        password: string;
+        role: import(".prisma/client").$Enums.Role;
         teamId: string;
     }>;
     update(id: string, updatePlayerDto: UpdatePlayerDto): Promise<{
-        message: string;
+        id: string;
+        email: string;
+        name: string;
+        password: string;
+        role: import(".prisma/client").$Enums.Role;
+        teamId: string;
     }>;
 }

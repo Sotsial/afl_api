@@ -14,10 +14,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayerController = void 0;
 const common_1 = require("@nestjs/common");
-const player_service_1 = require("./player.service");
 const create_player_dto_1 = require("./dto/create-player.dto");
 const update_player_dto_1 = require("./dto/update-player.dto");
 const public_decorator_1 = require("../decorators/public.decorator");
+const player_service_1 = require("./player.service");
+const client_1 = require("@prisma/client");
 let PlayerController = class PlayerController {
     constructor(playerService) {
         this.playerService = playerService;
@@ -28,8 +29,8 @@ let PlayerController = class PlayerController {
     findList(query) {
         return this.playerService.findList(query);
     }
-    findAll() {
-        return this.playerService.findAll();
+    findAll(query) {
+        return this.playerService.findAll({ where: query });
     }
     getDictionary(query) {
         return this.playerService.getDictionary(query);
@@ -58,8 +59,9 @@ __decorate([
 ], PlayerController.prototype, "findList", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], PlayerController.prototype, "findAll", null);
 __decorate([

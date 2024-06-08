@@ -10,19 +10,15 @@ export declare class UserController {
         name: string;
         password: string;
         role: import(".prisma/client").$Enums.Role;
+        teamId: string;
     }>;
     findOne(id: string): Promise<{
-        player: {
-            id: string;
-            userId: string;
-            teamId: string;
-        };
-    } & {
         id: string;
         email: string;
         name: string;
         password: string;
         role: import(".prisma/client").$Enums.Role;
+        teamId: string;
     }>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<{
         id: string;
@@ -30,5 +26,6 @@ export declare class UserController {
         name: string;
         password: string;
         role: import(".prisma/client").$Enums.Role;
+        teamId: string;
     }>;
 }

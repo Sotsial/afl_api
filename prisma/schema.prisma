@@ -9,12 +9,22 @@ datasource db {
 }
 
 model User {
-  id String  @id @default(uuid())
+  id String  @id @default(cuid())
   email String @unique
   name String 
   password String
-  player Player?
   role Role @default(PLAYER)
+
+  team Team? @relation(fields: [teamId], references: [id])
+  teamId String? @map("team_id")
+  captainedTeam Team? @relation(name: "capitan") 
+
+  tournamentApplications TournamentApplication[] 
+  matchApplications MatchApplication[]
+
+  matchTimeline MatchTimeline[]
+
+  @@map("user")
 }
 
 enum Role {
@@ -23,139 +33,109 @@ enum Role {
   SYSTEM_ADMIN
 }
 
-model Player {
-  id String  @id @default(uuid())
-  user User @relation(fields: [userId], references: [id])
-  userId String  @unique
-  team Team? @relation(fields: [teamId], references: [id])
-  teamId String
-  tournamentApplications TournamentApplication[]
-  matchApplications MatchApplication[]
-  matchTimeline MatchTimeline[]
-  captainedTeam Team? @relation(name: "capitan") 
-}
 
 model Team {
-  id  String  @id @default(uuid())
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   name String 
+
+  tournaments Tournament[]
   tournamentApplications TournamentApplication[]
+  wonTournaments Tournament[] @relation(name: "tournamentWinner") 
+  group Group[]
+
   match Match[] @relation(name: "participatingTeams") 
   matchApplications MatchApplication[]
-  matchTimeline MatchTimeline[]
-  players Player[] 
-  tournaments Tournament[]
-  group Group[]
   wonMatches Match[] @relation(name: "winningTeam") 
-  wonTournaments Tournament[] @relation(name: "tournamentWinner") 
-  capitan Player? @relation(fields: [capitanId], references: [id], name: "capitan") 
-  capitanId String? @unique 
-}
-
-model Tournament {
-  id  String  @id @default(uuid())
-  name String 
-  matchType MatchType
-  tournamentType TournamentType
-  tournamentApplications TournamentApplication[]
-  status TournamentStatus @default(NotStarted)
-  teamIds Team[]
-  groups Group[]
-  match Match[] 
-  winner Team? @relation(name: "tournamentWinner", fields: [winnerId], references: [id]) 
-  winnerId String?
-  startDate DateTime?
-}
-
-model Group {
-  id  String  @id @default(uuid())
-  tournament Tournament @relation(fields: [tournamentId],references: [id])
-  tournamentId String
-  teamIds Team[]
-  match Match[] 
-}
-
-model TournamentApplication {
-  id  String  @id @default(uuid())
-  team Team @relation(fields: [teamId],references: [id])
-  teamId String
-  tournament Tournament @relation(fields: [tournamentId],references: [id])
-  tournamentId String
-  players Player[]
-}
-
-model Match {
-  id  String  @id @default(uuid())
-  type MatchType
-  teams Team[] @relation(name: "participatingTeams") 
-  status MatchStatus @default(NotStarted)
-  group Group? @relation(fields: [groupId], references: [id],onDelete: Cascade) 
-  groupId String?
-  tournament Tournament @relation(fields: [tournamentId], references: [id]) 
-  tournamentId String
-  date DateTime?
-  matchApplications MatchApplication[]
   matchTimeline MatchTimeline[]
-  winner Team? @relation(name: "winningTeam", fields: [winnerId], references: [id]) 
-  winnerId String?
-  place String?
-  round Int
-  step Int?
-  time Int @default(0)
-  half Int @default(1)
-  mainReferee String?
-  firstReferee String?
-  secondReferee String?
+
+
+  players User[] 
+  capitan User? @relation(fields: [capitanId], references: [id], name: "capitan") 
+  capitanId String? @unique @map("capitan_id")
+
+  @@map("team")
 }
 
-model MatchApplication {
-  id  String  @id @default(uuid())
-  team Team @relation(fields: [teamId],references: [id])
-  teamId String
-  match Match @relation(fields: [matchId],references: [id])
-  matchId String
-  players Player[]
-  color String?
-}
-model MatchTimeline {
-  id  String  @id @default(uuid())
-  time Int
-  type MatchEvent
-  team Team @relation(fields: [teamId],references: [id])
-  teamId String
-  match Match @relation(fields: [matchId],references: [id])
-  matchId String
-  player Player @relation(fields: [playerId],references: [id])
-  playerId String
-  half Int @default(1)
-}
-
-model News {
-  id  String  @id @default(uuid())
-  title String
-  description String?
-}
 
 enum TournamentType {
   CUP
   LEAGUE
 }
 
-
-enum MatchType {
-  FUTSAL
-  MINI
-}
-
-enum MatchEvent {
-  GOAL
-  YELLOW
-  RED
-}
-
 enum TournamentStatus {
   NotStarted
   Pending
   Completed
+}
+model Tournament {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name String 
+  startDate DateTime? @map("start_date")
+  endDate DateTime? @map("end_date")
+
+  teamCount Int?
+  groupCount Int?
+  winnerGroupCount Int?
+  bestOfTheRest Int?
+
+
+  tournamentType TournamentType @map("tournament_type")
+  status TournamentStatus @default(NotStarted)
+
+  teams Team[]
+  groups Group[]
+  tournamentApplications TournamentApplication[]
+
+  match Match[] 
+  matchType MatchType
+
+  winner Team? @relation(name: "tournamentWinner", fields: [winnerId], references: [id]) 
+  winnerId String? @map("winner_id")
+
+  @@map("tournament")
+}
+
+model Group {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  winnerCount Int @default(1)
+
+  tournament Tournament @relation(fields: [tournamentId],references: [id])
+  tournamentId String @map("tournament_id")
+
+  teams Team[]
+  match Match[] 
+
+  @@map("group")
+}
+
+model TournamentApplication {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  team Team @relation(fields: [teamId],references: [id], onDelete: Cascade)
+  teamId String  @map("team_id")
+
+  tournament Tournament @relation(fields: [tournamentId],references: [id], onDelete: Cascade)
+  tournamentId String @map("tournament_id")
+
+  players User[]
+
+  @@map("tournament_application")
+}
+
+enum MatchType {
+  FUTSAL
+  MINI
 }
 
 enum MatchStatus {
@@ -166,3 +146,100 @@ enum MatchStatus {
   Suspended
   Completed
 }
+
+model Match {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  type MatchType 
+
+  date DateTime?
+  place String?
+  mainReferee String? @map("main_referee")
+  firstReferee String? @map("first_referee")
+  secondReferee String? @map("second_referee")
+
+  teams Team[] @relation(name: "participatingTeams") 
+
+  status MatchStatus @default(NotStarted)
+  time Int @default(0)
+  half Int @default(1)
+
+  group Group? @relation(fields: [groupId], references: [id],onDelete: Cascade) 
+  groupId String? @map("group_id")
+  round Int
+  step Int?
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id]) 
+  tournamentId String @map("tournament_id")
+
+  matchApplications MatchApplication[]
+  matchTimeline MatchTimeline[]
+
+  winner Team? @relation(name: "winningTeam", fields: [winnerId], references: [id]) 
+  winnerId String? @map("winner_id")
+
+  @@map("match")
+}
+
+model MatchApplication {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  color String?
+  players User[]
+
+  team Team @relation(fields: [teamId],references: [id])
+  teamId String @map("team_id")
+
+  match Match @relation(fields: [matchId],references: [id], onDelete: Cascade)
+  matchId String @map("match_id")
+
+  @@map("match_application")
+}
+
+enum MatchEvent {
+  GOAL
+  YELLOW
+  RED
+}
+
+model MatchTimeline {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  time Int
+  type MatchEvent
+  half Int @default(1)
+
+
+  team Team @relation(fields: [teamId],references: [id])
+  teamId String @map("team_id")
+
+  match Match @relation(fields: [matchId],references: [id], onDelete: Cascade)
+  matchId String @map("match_id")
+
+  player User @relation(fields: [playerId],references: [id])
+  playerId String @map("player_id")
+
+  @@map("match_timeline")
+}
+
+model News {
+  id  String  @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  title String
+  description String?
+
+  @@map("news")
+}
+
+
+
+
+

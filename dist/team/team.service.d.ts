@@ -13,6 +13,8 @@ export declare class TeamService {
     }): Promise<{
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             capitanId: string;
         }[];
@@ -22,6 +24,8 @@ export declare class TeamService {
     }>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         capitanId: string;
     }[]>;
@@ -40,40 +44,37 @@ export declare class TeamService {
         };
         match: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             type: import(".prisma/client").$Enums.MatchType;
-            status: import(".prisma/client").$Enums.MatchStatus;
-            groupId: string;
-            tournamentId: string;
             date: Date;
-            winnerId: string;
             place: string;
-            round: number;
-            step: number;
-            time: number;
-            half: number;
             mainReferee: string;
             firstReferee: string;
             secondReferee: string;
+            status: import(".prisma/client").$Enums.MatchStatus;
+            time: number;
+            half: number;
+            groupId: string;
+            round: number;
+            step: number;
+            tournamentId: string;
+            winnerId: string;
         }[];
-        players: ({
-            user: {
-                id: string;
-                email: string;
-                name: string;
-                password: string;
-                role: import(".prisma/client").$Enums.Role;
-            };
-        } & {
+        players: {
             id: string;
-            userId: string;
+            email: string;
+            name: string;
+            password: string;
+            role: import(".prisma/client").$Enums.Role;
             teamId: string;
-        })[];
+        }[];
         capitan: {
-            user: {
-                name: string;
-            };
+            name: string;
         };
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         capitanId: string;
     }>;
@@ -82,6 +83,8 @@ export declare class TeamService {
     }>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__TeamClient<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
         capitanId: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;

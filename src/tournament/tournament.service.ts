@@ -4,6 +4,7 @@ import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { PrismaService } from '../prisma.service';
 import { CreateTournamentApplicationDto } from './dto/create-tournament-application.dto';
 import { GroupService, groupCalculate } from 'src/group/group.service';
+import { UserService } from 'src/user/user.service';
 import { MatchService } from 'src/match/match.service';
 
 @Injectable()
@@ -11,15 +12,14 @@ export class TournamentService {
   constructor(
     private prisma: PrismaService,
     private groupService: GroupService,
+    private userService: UserService,
     private matchService: MatchService,
   ) {}
 
-  async create(createTournamentDto: CreateTournamentDto) {
-    const tour = await this.prisma.tournament.create({
-      data: createTournamentDto,
+  async create(data: CreateTournamentDto) {
+    return this.prisma.tournament.create({
+      data,
     });
-
-    return { message: `Турнир ${tour.name}  создан` };
   }
 
   async findList(query: { current: number; pageSize: number }) {
@@ -45,7 +45,9 @@ export class TournamentService {
   }
 
   findAll() {
-    return this.prisma.tournament.findMany();
+    return this.prisma.tournament.findMany({
+      include: { winner: { select: { name: true } } },
+    });
   }
 
   async getDictionary() {
@@ -72,28 +74,28 @@ export class TournamentService {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id },
       include: {
-        teamIds: true,
+        teams: true,
       },
     });
 
     return {
       ...tournament,
-      teamIds: tournament.teamIds.flatMap((el) => el.id),
+      teamIds: tournament.teams.flatMap((el) => el.id),
     };
   }
 
-  update(id: string, updateTournamentDto: UpdateTournamentDto) {
+  update(id: string, { teamIds, ...data }: UpdateTournamentDto) {
     return this.prisma.tournament.update({
       where: {
         id,
       },
       data: {
-        ...updateTournamentDto,
-        teamIds: {
-          set: updateTournamentDto.teamIds?.map((team) => ({
+        teams: {
+          set: teamIds?.map((team) => ({
             id: team,
           })),
         },
+        ...data,
       },
     });
   }
@@ -117,23 +119,38 @@ export class TournamentService {
                 teams: true,
               },
             },
-            teamIds: true,
+            teams: true,
           },
         },
-        teamIds: true,
+        teams: true,
         tournamentType: true,
       },
     });
     if (tournament.tournamentType === 'LEAGUE') {
       const matches = tournament.groups.flatMap((el) => el.match);
 
-      return [groupCalculate({ match: matches, teamIds: tournament.teamIds })];
+      const group = [
+        groupCalculate({ match: matches, teams: tournament.teams }),
+      ];
+      return { group };
     } else {
       const group = tournament.groups.map((el) => {
-        return groupCalculate({ match: el.match, teamIds: el.teamIds });
+        return groupCalculate({ match: el.match, teams: el.teams });
       });
-      // const bracket:IStep[] = []
-      return group;
+
+      const playoff = await this.prisma.match.findMany({
+        where: {
+          tournamentId: id,
+          groupId: null,
+        },
+        select: {
+          teams: { select: { name: true } },
+          step: true,
+          round: true,
+          date: true,
+        },
+      });
+      return { group, playoff };
     }
   }
 
@@ -145,6 +162,7 @@ export class TournamentService {
     teamId?: string;
   }) {
     if (teamId) {
+      // TODO:
       const res = await this.prisma.tournamentApplication.findFirst({
         where: {
           tournamentId,
@@ -159,6 +177,8 @@ export class TournamentService {
       });
       return res ? [res] : [];
     } else {
+      // TODO:
+
       return await this.prisma.tournamentApplication.findMany({
         where: {
           tournamentId,
@@ -187,9 +207,11 @@ export class TournamentService {
       this.prisma.tournament.findUnique({
         where: { id: tournamentId },
       }),
-      this.prisma.player.findMany({
+      this.userService.findAll({
         where: { id: { in: playerIds } },
       }),
+
+      // TODO:
       this.prisma.team.findUnique({
         where: { id: teamId },
       }),
@@ -227,7 +249,7 @@ export class TournamentService {
     playerIds: string[];
     id: string;
   }) {
-    const players = await this.prisma.player.findMany({
+    const players = await this.prisma.user.findMany({
       where: { id: { in: playerIds } },
     });
     await this.prisma.tournamentApplication.update({
@@ -246,8 +268,17 @@ export class TournamentService {
   async createTours(tournamentId: string) {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id: tournamentId },
-      select: { teamIds: true, status: true, tournamentType: true },
+      select: {
+        teams: true,
+        status: true,
+        tournamentType: true,
+        teamCount: true,
+        groupCount: true,
+        winnerGroupCount: true,
+      },
     });
+
+    const { teamCount, groupCount, winnerGroupCount } = tournament;
 
     if (!tournament) {
       throw new BadRequestException('Tournament not found.');
@@ -257,15 +288,7 @@ export class TournamentService {
       throw new BadRequestException('Tournament pending.');
     }
 
-    const teamIds = tournament.teamIds.map((team) => team.id);
-
-    if (teamIds.length < 2) {
-      throw new BadRequestException('Minimum 2 teams required for tournament.');
-    }
-
-    if (!!(teamIds.length % 2)) {
-      throw new BadRequestException('Нечетное кол-во команд');
-    }
+    const teamIds = tournament.teams.map((team) => team.id);
 
     try {
       if (tournament.tournamentType === 'LEAGUE') {
@@ -274,17 +297,24 @@ export class TournamentService {
           tournamentId,
         });
       } else if (tournament.tournamentType === 'CUP') {
-        if (teamIds.length !== 16) {
-          throw new BadRequestException('Команд должно быть 16');
+        if (teamIds.length !== teamCount) {
+          throw new BadRequestException(`Команд должно быть ${teamCount}`);
         }
 
-        const teams = Array.from({ length: teamIds.length / 4 }, (_, index) =>
-          teamIds.slice(index * 4, index * 4 + 4),
+        const teamsPerGroup = teamCount / groupCount; // Определяем количество команд в каждой группе
+
+        const teams = Array.from({ length: groupCount }, (_, index) =>
+          teamIds.slice(
+            index * teamsPerGroup,
+            index * teamsPerGroup + teamsPerGroup,
+          ),
         );
-        for (let i = 0; i < 4; i++) {
+
+        for (let i = 0; i < groupCount; i++) {
           await this.groupService.create({
             teamIds: teams[i],
             tournamentId,
+            winnerCount: winnerGroupCount,
           });
         }
       }
@@ -308,6 +338,8 @@ export class TournamentService {
         status: true,
         tournamentType: true,
         matchType: true,
+        winnerGroupCount: true,
+        groupCount: true,
         groups: {
           select: {
             match: {
@@ -323,7 +355,8 @@ export class TournamentService {
                 teams: true,
               },
             },
-            teamIds: true,
+            teams: true,
+            id: true,
           },
         },
       },
@@ -332,8 +365,8 @@ export class TournamentService {
     const matches = tournament.groups.flatMap((el) => el.match);
 
     if (
-      tournament.status === 'Completed' &&
-      matches.length <= 0 &&
+      tournament.status === 'Completed' ||
+      matches.length <= 0 ||
       matches.some((el) => el.status !== 'Completed')
     )
       return;
@@ -342,18 +375,33 @@ export class TournamentService {
       await this.tournamentEnd(id, groupCalculate(tournament.groups[0])[0].id);
       return;
     } else if (tournament.tournamentType === 'CUP') {
-      const isPlayOff = matches.some((el) => !el.groupId);
+      const matches = await this.prisma.match.findMany({
+        where: { tournamentId: id },
+        select: { groupId: true, step: true, status: true },
+      });
 
+      const isPlayOff = matches.some((el) => !el.groupId);
+      const isPending = matches.some((el) => el.status !== 'Completed');
+      if (isPending) return;
       let teams: string[] = [];
 
       const minStepItem = matches.reduce((min, item) => {
         return item.step && item.step < min ? item.step : min;
-      }, 4);
+      }, tournament.winnerGroupCount * tournament.groupCount);
+
+      if (isPlayOff && minStepItem === 1) {
+        const final = await this.prisma.match.findFirst({
+          where: { tournamentId: id, step: 1, status: 'Completed' },
+          select: { winnerId: true },
+        });
+
+        return await this.tournamentEnd(id, final.winnerId);
+      }
 
       if (!isPlayOff) {
         teams = tournament.groups.flatMap((el) =>
           groupCalculate(el)
-            .slice(0, 2)
+            .slice(0, tournament.winnerGroupCount)
             .map((team) => team.id),
         );
       } else {
@@ -378,15 +426,14 @@ export class TournamentService {
         mathesStep.push({
           teamIds: [teams[i], teams[i + 1]],
           round: i / 2 + 1, // Инкрементируем значение round
-          step: minStepItem - 1,
+          step: minStepItem / 2,
         });
       }
-
-      // this.matchService.createMany({
-      //   type: tournament.matchType,
-      //   tournamentId: id,
-      //   matches: mathesStep,
-      // });
+      this.matchService.createMany({
+        type: tournament.matchType,
+        tournamentId: id,
+        matches: mathesStep,
+      });
     }
   }
 

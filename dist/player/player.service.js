@@ -19,60 +19,41 @@ let PlayerService = class PlayerService {
         this.prisma = prisma;
         this.userService = userService;
     }
-    async create({ name, teamId, email, password }) {
-        try {
-            await this.prisma.$transaction(async (tx) => {
-                const team = await tx.team.findUnique({
-                    where: { id: teamId },
-                    select: {
-                        capitanId: true,
-                        id: true,
-                    },
-                });
-                if (!team) {
-                    throw new common_1.BadRequestException('Команда не найдена');
-                }
-                const pass = await argon2.hash(password);
-                const user = await tx.user.create({
-                    data: { email: email.toLowerCase(), name, password: pass },
-                });
-                const player = await tx.player.create({
-                    data: {
-                        userId: user.id,
-                        teamId: team.id,
-                    },
-                });
-                if (!team.capitanId) {
-                    await tx.team.update({
-                        where: {
-                            id: teamId,
-                        },
-                        data: {
-                            capitan: { connect: player },
-                        },
-                    });
-                }
-                return { message: 'Игрок создан' };
+    async create(createUserDto) {
+        const password = await argon2.hash(createUserDto.password);
+        const teamId = createUserDto.teamId;
+        await this.prisma.$transaction(async (tx) => {
+            const user = await this.userService.create({
+                ...createUserDto,
+                password,
+                role: 'PLAYER',
             });
-        }
-        catch {
-            throw new common_1.BadRequestException('Ошибка при создании игрока');
-        }
+            const team = await tx.team.findUnique({
+                where: { id: teamId },
+                select: { capitanId: true },
+            });
+            if (team && !team.capitanId) {
+                await tx.team.update({
+                    where: { id: teamId },
+                    data: { capitan: { connect: { id: user.id } } },
+                });
+            }
+        });
     }
     async findList(query) {
         const { pageSize = 10, current = 1, teamId } = query;
         const pageNumber = Math.max(1, current);
         const skip = (pageNumber - 1) * pageSize;
         const take = +pageSize;
-        const results = await this.prisma.player.findMany({
+        const results = await this.prisma.user.findMany({
             take,
             skip,
             where: {
                 teamId,
+                role: 'PLAYER',
             },
             include: {
                 team: { select: { name: true } },
-                user: { select: { name: true } },
                 matchTimeline: {
                     select: {
                         type: true,
@@ -80,7 +61,7 @@ let PlayerService = class PlayerService {
                 },
             },
         });
-        const totalCount = await this.prisma.player.count();
+        const totalCount = await this.prisma.user.count({ where: { teamId } });
         results.forEach((player) => {
             const statistic = player.matchTimeline.reduce((acc, event) => {
                 switch (event.type) {
@@ -106,11 +87,11 @@ let PlayerService = class PlayerService {
             total: totalCount,
         };
     }
-    findAll() {
-        return this.prisma.player.findMany();
+    async findAll({ where }) {
+        return this.userService.findAll({ where: { ...where, role: 'PLAYER' } });
     }
     async getDictionary({ teamId, tournamentId, }) {
-        const whereCondition = {};
+        const whereCondition = { role: 'PLAYER' };
         if (tournamentId) {
             whereCondition.tournamentApplications = {
                 some: { tournamentId },
@@ -119,19 +100,19 @@ let PlayerService = class PlayerService {
         if (teamId) {
             whereCondition.teamId = teamId;
         }
-        const list = await this.prisma.player.findMany({
+        const list = await this.prisma.user.findMany({
             where: whereCondition,
             select: {
                 id: true,
-                user: true,
+                name: true,
             },
         });
-        return list.map((el) => ({ label: el.user.name, value: el.id }));
+        return list.map((el) => ({ label: el.name, value: el.id }));
     }
     async findOne(id) {
-        const player = await this.prisma.player.findUnique({
+        const player = await this.prisma.user.findUnique({
             where: { id },
-            include: { team: true, user: true, captainedTeam: true },
+            include: { team: true, captainedTeam: true },
         });
         if (!player) {
             throw new common_1.BadRequestException('Игрок не найден');
@@ -158,20 +139,7 @@ let PlayerService = class PlayerService {
         return { ...player, results };
     }
     async update(id, updatePlayerDto) {
-        const player = await this.prisma.player.findUnique({
-            where: { id },
-            select: { userId: true },
-        });
-        await this.userService.update(player.userId, updatePlayerDto);
-        if (updatePlayerDto.teamId) {
-            await this.prisma.player.update({
-                where: {
-                    id,
-                },
-                data: updatePlayerDto,
-            });
-        }
-        return { message: 'Игрок сохранен' };
+        return await this.userService.update(id, updatePlayerDto);
     }
 };
 exports.PlayerService = PlayerService;

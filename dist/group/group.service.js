@@ -19,10 +19,10 @@ let GroupService = class GroupService {
         this.prisma = prisma;
         this.matchService = matchService;
     }
-    async create({ tournamentId, teamIds, }) {
+    async create({ tournamentId, teamIds, winnerCount, }) {
         const tournament = await this.prisma.tournament.findUnique({
             where: { id: tournamentId },
-            select: { teamIds: true, matchType: true },
+            select: { teams: true, matchType: true },
         });
         if (!tournament) {
             throw new common_1.BadRequestException('Tournament not found.');
@@ -58,7 +58,8 @@ let GroupService = class GroupService {
             const group = await this.prisma.group.create({
                 data: {
                     tournamentId,
-                    teamIds: { connect: teamIds.map((id) => ({ id })) },
+                    teams: { connect: teamIds.map((id) => ({ id })) },
+                    winnerCount,
                 },
             });
             return await this.matchService.createMany({
@@ -81,7 +82,7 @@ exports.GroupService = GroupService = __decorate([
 ], GroupService);
 const groupCalculate = (group) => {
     const mathes = group.match.filter((el) => !['NotStarted', 'Suspended', 'Preparation'].includes(el.status));
-    const table = group.teamIds.map((team) => {
+    const table = group.teams.map((team) => {
         const myMathes = mathes.filter((match) => match.teams.some((el) => el.id === team.id));
         myMathes.forEach((el) => {
             if (el.status === 'Pending' || el.status === 'Break') {

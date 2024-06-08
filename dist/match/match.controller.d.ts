@@ -8,20 +8,22 @@ export declare class MatchController {
     constructor(matchService: MatchService);
     create(createMatchDto: CreateMatchDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         type: import(".prisma/client").$Enums.MatchType;
-        status: import(".prisma/client").$Enums.MatchStatus;
-        groupId: string;
-        tournamentId: string;
         date: Date;
-        winnerId: string;
         place: string;
-        round: number;
-        step: number;
-        time: number;
-        half: number;
         mainReferee: string;
         firstReferee: string;
         secondReferee: string;
+        status: import(".prisma/client").$Enums.MatchStatus;
+        time: number;
+        half: number;
+        groupId: string;
+        round: number;
+        step: number;
+        tournamentId: string;
+        winnerId: string;
     }>;
     findList(req: any, query: any): Promise<{
         data: ({
@@ -31,35 +33,46 @@ export declare class MatchController {
             group: {
                 tournament: {
                     id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
                     name: string;
-                    matchType: import(".prisma/client").$Enums.MatchType;
+                    startDate: Date;
+                    endDate: Date;
+                    teamCount: number;
+                    groupCount: number;
+                    winnerGroupCount: number;
+                    bestOfTheRest: number;
                     tournamentType: import(".prisma/client").$Enums.TournamentType;
                     status: import(".prisma/client").$Enums.TournamentStatus;
+                    matchType: import(".prisma/client").$Enums.MatchType;
                     winnerId: string;
-                    startDate: Date;
                 };
             };
             teams: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 name: string;
                 capitanId: string;
             }[];
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             type: import(".prisma/client").$Enums.MatchType;
-            status: import(".prisma/client").$Enums.MatchStatus;
-            groupId: string;
-            tournamentId: string;
             date: Date;
-            winnerId: string;
             place: string;
-            round: number;
-            step: number;
-            time: number;
-            half: number;
             mainReferee: string;
             firstReferee: string;
             secondReferee: string;
+            status: import(".prisma/client").$Enums.MatchStatus;
+            time: number;
+            half: number;
+            groupId: string;
+            round: number;
+            step: number;
+            tournamentId: string;
+            winnerId: string;
         })[];
         page: number;
         pageSize: number;
@@ -76,14 +89,19 @@ export declare class MatchController {
             };
             players: {
                 id: string;
-                userId: string;
+                email: string;
+                name: string;
+                password: string;
+                role: import(".prisma/client").$Enums.Role;
                 teamId: string;
             }[];
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            color: string;
             teamId: string;
             matchId: string;
-            color: string;
         })[];
         teams: {
             name: string;
@@ -91,20 +109,22 @@ export declare class MatchController {
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         type: import(".prisma/client").$Enums.MatchType;
-        status: import(".prisma/client").$Enums.MatchStatus;
-        groupId: string;
-        tournamentId: string;
         date: Date;
-        winnerId: string;
         place: string;
-        round: number;
-        step: number;
-        time: number;
-        half: number;
         mainReferee: string;
         firstReferee: string;
         secondReferee: string;
+        status: import(".prisma/client").$Enums.MatchStatus;
+        time: number;
+        half: number;
+        groupId: string;
+        round: number;
+        step: number;
+        tournamentId: string;
+        winnerId: string;
     }>;
     findAll(dto: any): Promise<({
         matchTimeline: {
@@ -116,20 +136,22 @@ export declare class MatchController {
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         type: import(".prisma/client").$Enums.MatchType;
-        status: import(".prisma/client").$Enums.MatchStatus;
-        groupId: string;
-        tournamentId: string;
         date: Date;
-        winnerId: string;
         place: string;
-        round: number;
-        step: number;
-        time: number;
-        half: number;
         mainReferee: string;
         firstReferee: string;
         secondReferee: string;
+        status: import(".prisma/client").$Enums.MatchStatus;
+        time: number;
+        half: number;
+        groupId: string;
+        round: number;
+        step: number;
+        tournamentId: string;
+        winnerId: string;
     })[]>;
     updateApplication(updateMatchApplicationDto: UpdateMatchApplicationDto): Promise<{
         message: string;
@@ -139,46 +161,51 @@ export declare class MatchController {
     }>;
     createMatchEvent(createMatchEventDto: CreateMatchEventDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         time: number;
         type: import(".prisma/client").$Enums.MatchEvent;
+        half: number;
         teamId: string;
         matchId: string;
         playerId: string;
-        half: number;
     }>;
     findMatchEvents(matchId: string): Promise<({
         player: {
-            user: {
-                name: string;
-            };
+            name: string;
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         time: number;
         type: import(".prisma/client").$Enums.MatchEvent;
+        half: number;
         teamId: string;
         matchId: string;
         playerId: string;
-        half: number;
     })[]>;
     update(id: string, updateMatchDto: UpdateMatchDto): Promise<{
         message: string;
     }>;
     changeTime(id: string, time: any): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         type: import(".prisma/client").$Enums.MatchType;
-        status: import(".prisma/client").$Enums.MatchStatus;
-        groupId: string;
-        tournamentId: string;
         date: Date;
-        winnerId: string;
         place: string;
-        round: number;
-        step: number;
-        time: number;
-        half: number;
         mainReferee: string;
         firstReferee: string;
         secondReferee: string;
+        status: import(".prisma/client").$Enums.MatchStatus;
+        time: number;
+        half: number;
+        groupId: string;
+        round: number;
+        step: number;
+        tournamentId: string;
+        winnerId: string;
     }>;
+    autoPlay(id: string): Promise<void>;
 }
